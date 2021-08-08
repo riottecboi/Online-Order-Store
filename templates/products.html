@@ -42,13 +42,13 @@
                 <div class="col-12">
                     <nav class="main-nav">
                         <!-- ***** Logo Start ***** -->
-                        <a href="index.html" class="logo">Food Store <em> Website</em></a>
+                        <a href="index.html" class="logo">By <em> APE</em></a>
                         <!-- ***** Logo End ***** -->
                         <!-- ***** Menu Start ***** -->
                         <ul class="nav">
                             <li><a href="index.html">Home</a></li>
                             <li><a href="products.html" class="active">Products</a></li>
-                            <li><a href="checkout.html">Checkout</a></li>
+                            <li><a href="checkout.html">{% if numb %} Checkout ({{ numb }}) {% else %} Checkout {% endif %}</a></li>
                             <li class="dropdown">
                                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">About</a>
                               
@@ -96,6 +96,8 @@
             <br>
 
             <div class="row">
+                {% if items|length > 0 %}
+                {% for item in items %}
                 <div class="col-lg-4">
                     <div class="trainer-item">
                         <div class="image-thumb">
@@ -103,144 +105,54 @@
                         </div>
                         <div class="down-content">
                             <span>
-                                <del><sup>$</sup>15.00</del> <sup>$</sup>17.00
+                                <del><sup>$</sup>35000</del> <sup>$</sup>{{ item['price'] }}
                             </span>
 
-                            <h4>Lorem ipsum dolor sit amet, consectetur</h4>
+                            <h4>{{ item['title'] }}</h4>
 
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia, libero, reprehenderit? Aliquam vel, voluptate placeat, porro nemo impedit reprehenderit eligendi.</p>
+                            <p>{{ item['description'] }}</p>
+                            <form id="ord" action="/order/{{item['id']}}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="id" value="{{ item['id'] }}"/>
+                                <button type="submit" value="{{ item['id'] }}" class="btn">+ Order</button>
+                            </form>
 
-                            <ul class="social-icons">
-                                <li><a href="product-details.html">+ Order</a></li>
-                            </ul>
+
                         </div>
                     </div>
                 </div>
+
+                {% endfor %}
+                {% else %}
                 <div class="col-lg-4">
                     <div class="trainer-item">
-                        <div class="image-thumb">
-                            <img src="static/images/product-2-720x480.jpg" alt="">
-                        </div>
-                        <div class="down-content">
-                            <span>
-                                <del><sup>$</sup>15.00</del> <sup>$</sup>17.00
-                            </span>
-
-                            <h4>Lorem ipsum dolor sit amet, consectetur</h4>
-
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia, libero, reprehenderit? Aliquam vel, voluptate placeat, porro nemo impedit reprehenderit eligendi.</p>
-
-                            <ul class="social-icons">
-                                <li><a href="product-details.html">+ Order</a></li>
-                            </ul>
-                        </div>
+                        <h4>NO PRODUCTS</h4>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="trainer-item">
-                        <div class="image-thumb">
-                            <img src="static/images/product-3-720x480.jpg" alt="">
-                        </div>
-                        <div class="down-content">
-                            <span>
-                                <del><sup>$</sup>15.00</del> <sup>$</sup>17.00
-                            </span>
-
-                            <h4>Lorem ipsum dolor sit amet, consectetur</h4>
-
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia, libero, reprehenderit? Aliquam vel, voluptate placeat, porro nemo impedit reprehenderit eligendi.</p>
-
-                            <ul class="social-icons">
-                                <li><a href="product-details.html">+ Order</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="trainer-item">
-                        <div class="image-thumb">
-                            <img src="static/images/product-4-720x480.jpg" alt="">
-                        </div>
-                        <div class="down-content">
-                            <span>
-                                <del><sup>$</sup>15.00</del> <sup>$</sup>17.00
-                            </span>
-
-                            <h4>Lorem ipsum dolor sit amet, consectetur</h4>
-
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia, libero, reprehenderit? Aliquam vel, voluptate placeat, porro nemo impedit reprehenderit eligendi.</p>
-
-                            <ul class="social-icons">
-                                <li><a href="product-details.html">+ Order</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="trainer-item">
-                        <div class="image-thumb">
-                            <img src="static/images/product-5-720x480.jpg" alt="">
-                        </div>
-                        <div class="down-content">
-                            <span>
-                                <del><sup>$</sup>15.00</del> <sup>$</sup>17.00
-                            </span>
-
-                            <h4>Lorem ipsum dolor sit amet, consectetur</h4>
-
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia, libero, reprehenderit? Aliquam vel, voluptate placeat, porro nemo impedit reprehenderit eligendi.</p>
-
-                            <ul class="social-icons">
-                                <li><a href="product-details.html">+ Order</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="trainer-item">
-                        <div class="image-thumb">
-                            <img src="static/images/product-6-720x480.jpg" alt="">
-                        </div>
-                        <div class="down-content">
-                            <span>
-                                <del><sup>$</sup>15.00</del> <sup>$</sup>17.00
-                            </span>
-
-                            <h4>Lorem ipsum dolor sit amet, consectetur</h4>
-
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia, libero, reprehenderit? Aliquam vel, voluptate placeat, porro nemo impedit reprehenderit eligendi.</p>
-
-                            <ul class="social-icons">
-                                <li><a href="product-details.html">+ Order</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
             </div>
 
             <br>
                 
-            <nav>
-              <ul class="pagination pagination-lg justify-content-center">
-                <li class="page-item">
-                  <a class="page-link" href="#" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                    <span class="sr-only">Previous</span>
-                  </a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                  <a class="page-link" href="#" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                    <span class="sr-only">Next</span>
-                  </a>
-                </li>
-              </ul>
-            </nav>
-
+<!--            <nav>-->
+<!--              <ul class="pagination pagination-lg justify-content-center">-->
+<!--                <li class="page-item">-->
+<!--                  <a class="page-link" href="#" aria-label="Previous">-->
+<!--                    <span aria-hidden="true">&laquo;</span>-->
+<!--                    <span class="sr-only">Previous</span>-->
+<!--                  </a>-->
+<!--                </li>-->
+<!--                <li class="page-item"><a class="page-link" href="#">1</a></li>-->
+<!--                <li class="page-item"><a class="page-link" href="#">2</a></li>-->
+<!--                <li class="page-item"><a class="page-link" href="#">3</a></li>-->
+<!--                <li class="page-item">-->
+<!--                  <a class="page-link" href="#" aria-label="Next">-->
+<!--                    <span aria-hidden="true">&raquo;</span>-->
+<!--                    <span class="sr-only">Next</span>-->
+<!--                  </a>-->
+<!--                </li>-->
+<!--              </ul>-->
+<!--            </nav>-->
         </div>
     </section>
     <!-- ***** Fleet Ends ***** -->
@@ -252,8 +164,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <p>
-                        Copyright © 2020 Company Name
-                        - Template by: <a href="https://www.phpjabbers.com/">PHPJabbers.com</a>
+                        Copyright © 2020 Techinno - By Ape
                     </p>
                 </div>
             </div>

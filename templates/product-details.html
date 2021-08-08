@@ -47,18 +47,8 @@
                         <!-- ***** Menu Start ***** -->
                         <ul class="nav">
                             <li><a href="index.html">Home</a></li>
-                            <li><a href="products.html" class="active">Products</a></li>
+                            <li><a href="/products" class="active">Products</a></li>
                             <li><a href="checkout.html">Checkout</a></li>
-                            <li class="dropdown">
-                                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">About</a>
-                              
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="about.html">About Us</a>
-                                    <a class="dropdown-item" href="blog.html">Blog</a>
-                                    <a class="dropdown-item" href="testimonials.html">Testimonials</a>
-                                    <a class="dropdown-item" href="terms.html">Terms</a>
-                                </div>
-                            </li>
                             <li><a href="contact.html">Contact</a></li> 
                         </ul>        
                         <a class='menu-trigger'>
@@ -80,7 +70,7 @@
                     <div class="cta-content">
                         <br>
                         <br>
-                        <h2><del><sup>$</sup>18.00</del> <em><sup>$</sup>17.00</em></h2>
+                        <h2>Almost <em>Finish ...</em></h2>
                         <p>Lorem ipsum dolor sit amet, consectetur.</p>
                     </div>
                 </div>
@@ -94,71 +84,77 @@
         <div class="container">
             <br>
             <br>
-
-            <div class="row">
-              <div class="col-md-8">
-                <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
-                  <ol class="carousel-indicators">
-                    <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
-                    <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
-                    <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
-                  </ol>
-                  <div class="carousel-inner">
-                    <div class="carousel-item active">
-                      <img class="d-block w-100" src="static/images/product-image-1-1200x600.jpg" alt="First slide">
-                    </div>
-                    <div class="carousel-item">
-                      <img class="d-block w-100" src="static/images/product-image-1-1200x600.jpg" alt="Second slide">
-                    </div>
-                    <div class="carousel-item">
-                      <img class="d-block w-100" src="static/images/product-image-1-1200x600.jpg" alt="Third slide">
-                    </div>
-                  </div>
-                  <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                  </a>
-                  <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                  </a>
-                </div>
-
-                <br>
-              </div>
-
-              <div class="col-md-4">
-                <div class="contact-form">
-                  <form action="#" id="contact">
-                    <div class="form-group">
-                      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Excepturi ratione molestias maxime odio!</p>
-                    </div>
-                    
-                    <label>Extra 1</label>
-
-                    <select>
-                        <option value="0">Extra A</option>
-                        <option value="1">Extra B</option>
-                        <option value="2">Extra C</option>
-                    </select>
-
+            <form id="check" action="/processing" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {% if items|length > 0 %}
+                {% for item in items %}
                     <div class="row">
-                      <div class="col-md-6">
-                        <label>Quantity</label>
+                      <div class="col-md-8">
+                        <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                          <ol class="carousel-indicators">
+                            <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                            <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+                            <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+                          </ol>
+                          <div class="carousel-inner">
+                            <div class="carousel-item active">
+                              <img class="d-block w-100" src="static/images/product-image-1-1200x600.jpg" alt="First slide">
+                            </div>
+                            <div class="carousel-item">
+                              <img class="d-block w-100" src="static/images/product-image-1-1200x600.jpg" alt="Second slide">
+                            </div>
+                            <div class="carousel-item">
+                              <img class="d-block w-100" src="static/images/product-image-1-1200x600.jpg" alt="Third slide">
+                            </div>
+                          </div>
+                          <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                          </a>
+                          <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                          </a>
+                        </div>
 
-                        <input type="text" placeholder="1">
+                        <br>
+                      </div>
+
+                      <div class="col-md-4">
+                        <div class="contact-form">
+                            <div class="form-group">
+                              <p>{{item['title']}}</p>
+                            </div>
+                            <div class="row">
+                              <div class="col-md-6">
+                                  <label>Quantity</label>
+                                  <input name="quantity" type="text" placeholder="1" required>
+                                  <input name="item" type="hidden" value="{{item['id']}}">
+                              </div>
+                            </div>
+                        </div>
+                        <br>
                       </div>
                     </div>
-                    
-                    <div class="main-button">
-                        <a href="checkout.html">Add to cart</a>
+                {% endfor %}
+                {% else %}
+                <div class="col-lg-4">
+                    <div class="trainer-item">
+                        <h4>NO PRODUCTS</h4>
                     </div>
-                  </form>
                 </div>
-
-                <br>
-              </div>
-            </div>
+                {% endif %}
+                <div class="col-lg-12">
+                    <div class="main-button">
+                        <div class="float-left">
+                            <a href="javascript:;" onclick="document.getElementById('check').submit();">Add to cart</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <br>
+            <br>
+            <br>
         </div>
     </section>
     <!-- ***** Fleet Ends ***** -->
@@ -169,76 +165,13 @@
             <div class="row">
                 <div class="col-lg-12">
                     <p>
-                        Copyright © 2020 Company Name
-                        - Template by: <a href="https://www.phpjabbers.com/">PHPJabbers.com</a>
+                        Copyright © 2021 By APE
+                        - Developed by: Techinno </a>
                     </p>
                 </div>
             </div>
         </div>
     </footer>
-
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Enquiry</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="contact-us">
-            <div class="contact-form">
-              <form action="#" id="contact">
-                  <div class="row">
-                       <div class="col-md-6">
-                          <fieldset>
-                            <input type="text" class="form-control" placeholder="Enter full name" required="">
-                          </fieldset>
-                       </div>
-
-                       <div class="col-md-6">
-                          <fieldset>
-                            <input type="text" class="form-control" placeholder="Enter email address" required="">
-                          </fieldset>
-                       </div>
-                  </div>
-
-                  <div class="row">
-                       <div class="col-md-6">
-                          <fieldset>
-                            <input type="text" class="form-control" placeholder="Enter phone" required="">
-                          </fieldset>
-                       </div>
-
-                       <div class="col-md-6">
-                          <div class="row">
-                             <div class="col-md-6">
-                                <fieldset>
-                                  <input type="text" class="form-control" placeholder="From date" required="">
-                                </fieldset>
-                             </div>
-
-                             <div class="col-md-6">
-                                <fieldset>
-                                  <input type="text" class="form-control" placeholder="To date" required="">
-                                </fieldset>
-                             </div>
-                          </div>
-                       </div>
-                  </div>
-              </form>
-           </div>
-           </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary">Send Request</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- jQuery -->
     <script src="static/js/jquery-2.1.0.min.js"></script>

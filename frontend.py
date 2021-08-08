@@ -41,6 +41,17 @@ def list():
     conn.close()
     return ret
 
+def get_items(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select * from {app.config['ITEMS_TABLE']} where id=%s"
+    c.execute(mysql_select_query,(id,))
+    record = c.fetchone()
+    if record is not None:
+        ret = {'id': record[0], 'title': record[1], 'description': record[2], 'price': record[3]}, 200
+    else:
+        ret = {}, 404
+    return ret
 
 @app.route('/')
 def index():
@@ -48,21 +59,33 @@ def index():
 
 @app.route('/products', methods=['GET','POST'])
 def products():
-    get_items = list()
-    numb = request.args.get('numb')
-    if numb is not None:
-        numb = numb
-        return render_template('products.html', items=get_items[0], numb=numb), get_items[1]
-    else:
-        return render_template('products.html', items=get_items[0]), get_items[1]
+    items = list()
+    return render_template('products.html', items=items[0]), items[1]
 
-@app.route('/order/<int:id>', methods=['POST'])
-def order(id):
-    itemid = int(request.form['id'])
-    return redirect(url_for('products'))
+@app.route('/detail', methods=['GET','POST'])
+def detail():
+    datas = []
+    id_list = request.args.getlist('itemids')
+    for id in id_list:
+        item = get_items(id)
+        if item[1] == 200:
+            datas.append(item[0])
+    return render_template('product-details.html', items=datas)
 
 
+@app.route('/check', methods=['POST'])
+def check():
+    itemids = request.form.getlist('check')
+    return redirect(url_for('detail', itemids=itemids))
 
+@app.route('/processing', methods=['POST'])
+def processing():
+    products = []
+    quantity = request.form.getlist('quantity')
+    item_id = request.form.getlist('item')
+    for i, q in zip(item_id, quantity):
+        products.append({'id': i, 'quantity': q})
+    return redirect(url_for('checkout', products=products))
 
 try:
     app.config.from_pyfile('settings.cfg')

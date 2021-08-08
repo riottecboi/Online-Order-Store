@@ -9,7 +9,17 @@ figure, header, nav, section, article, aside, footer, figcaption {
   border: 0;
   outline: 0;
 }
-
+.btn {
+    border: none;
+    outline: none;
+    background: none;
+    cursor: pointer;
+    color: black;
+    padding: 0;
+    text-decoration: underline;
+    font-family: inherit;
+    font-size: inherit;
+}
 .clearfix:after {
   content: ".";
   display: block;

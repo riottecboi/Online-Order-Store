@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "hello"
+    return render_template("index.html")
 
 @app.route("/checkout")
 def checkout():
@@ -17,6 +17,15 @@ def products():
 @app.route("/product-details")
 def details():
     return render_template("product-details.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("thankyou.html")
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
 
 if __name__ == "__main__":
     app.run()

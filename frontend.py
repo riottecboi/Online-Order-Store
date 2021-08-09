@@ -114,8 +114,17 @@ def processing():
     total = request.form.get('price')
     update = update_order(identified,name,phone,email,address,city,type,total)
     if update[1] == 200:
-        return 'Done'
+        return redirect(url_for('done'))
+    else:
+        return redirect(url_for('products'))
 
+@app.route("/done")
+def done():
+    return render_template("thankyou.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
 
 @app.route('/check', methods=['POST'])
 def check():

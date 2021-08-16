@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie-edge">
+    <title>Menu</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400">  <!-- Google web font "Open Sans" -->
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/templatemo-style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/modal.css') }}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<style>
+    label {
+  background-color: #3298D4;
+  color: white;
+  padding: 0.5rem;
+  font-family: sans-serif;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+#file-chosen{
+    color: darkgray;
+  margin-left: 0.3rem;
+  font-family: sans-serif;
+}
+    .search {
+    margin-left: auto;
+    margin-right: 10px;
+}
+   .search > div {
+  display: inline-block;
+  position: relative;
+  filter: drop-shadow(0 1px #0091c2);
+}
+
+.search > div:after {
+  content: "";
+  background: rgba(0,0,0,.5);
+  width: 2px;
+  height: 10px;
+  position: absolute;
+  top: 22px;
+  right: 0px;
+  transform: rotate(135deg);
+}
+
+.search > div > input {
+  color: rgba(0,0,0,.5);
+  font-size: 14px;
+  background: transparent;
+  width: 25px;
+  height: 25px;
+  outline: none;
+  border-radius: 35px;
+  transition: width 0.5s;
+}
+
+.search > div > input::placeholder {
+  color: rgba(0,0,0,.25);
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.search > div > input:focus::placeholder {
+  opacity: 1;
+}
+
+.search > div > input:focus,
+.search > div > input:not(:placeholder-shown) {
+  width: 250px;
+}
+</style>
+<body class="hero is-info is-fullheight">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="login_mes active">
+            {% if messages|length > 1 %}
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            {% else %}
+                {{ messages[0]}}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% endwith %}
+    <div id="particles-js">
+        <div class="navbar navbar-expand-lg navbar-light bg-light" style="color: rgba(0,0,0,.5)">
+            <div class="navbar-nav">
+                <a class="nav-item nav-link " href="{{ url_for('menu') }}">Control Panel</a>
+                {#<img src="{{ url_for('static',filename='close.png') }}">#}
+            </div>
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" style="padding-left: 5.5rem;padding-right: 5.5rem" data-toggle="modal" data-target="#uploadfile">Add</a>
+              <a class="nav-item nav-link" style="padding-left: 0.5rem;padding-right: 0.5rem" href="{{ url_for('data') }}">Order {% if results > 0 %}({{results}}){% endif %}</a>
+            </div>
+
+            <form class="search" action="/search" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div>
+                    <input type="text" name="term" placeholder=" Search file, user . . . " required>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <div class="modal" id="uploadfile" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #3298D4;color: white;">
+            <h4 class="modal-title">Adding data</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <form id="uploadfileform" action="" method="post" enctype = "multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="viewstate" value="{{ viewstate }}">
+            <div class="modal-body">
+                <h5>File name</h5>
+                <p><input type="text" id="filename"
+                          name="filename" placeholder="Input filename" required>
+                </p>
+                <hr>
+                <p>
+                    <input type="file" name='file' id="actual-btn" accept=".xlsx, .xls" hidden required>
+                    <label for="actual-btn">Choose File</label>
+                    <span id="file-chosen">No file chosen</span>
+                </p>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" >Upload</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- The Modal -->
+    <div class="modal" id="myModal" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #3298D4;color: white;">
+            <h4 class="modal-title">Edit Profile </h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+            <div class="modal-body">
+                <h5 data-toggle="modal" data-target="#changedisplayname"> <img src="{{ url_for('static',filename='user.png') }}" width="30px" height="30px"> Change displayname</h5>
+                <h5 data-toggle="modal" data-target="#changepassword"> <img src="{{ url_for('static',filename='password.png') }}" width="30px" height="30px"> Change password</h5>
+                <p></p>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Modal -->
+    <div class="modal" id="changedisplayname" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #3298D4;color: white;">
+            <h4 class="modal-title">Modify your display name, <b>{% if displayuser %} {{ displayuser }} {% else %} {{ user }} {% endif %}</b></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <form id="changedisplaynameform" action="" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="viewstate" value="{{ viewstate }}">
+            <div class="modal-body">
+                <h5>Change displayname</h5>
+                <p><input type="text" name="newname" id="newinput"
+                       placeholder="{% if displayuser %} {{ displayuser }} {% else %}New Displayname{% endif %}" required>
+                </p>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" >Save changes</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Modal -->
+    <div class="modal" id="changepassword" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #3298D4;color: white;">
+            <h4 class="modal-title">Change password</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <form id="changepass" action="" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="viewstate" value="{{ viewstate }}">
+            <div class="modal-body">
+                <h5>Current Password</h5>
+                <p><input type="password" id="curinputpass"
+                          name="curpass" placeholder="Current Password" required></p>
+                <hr>
+                <h5>New Password</h5>
+                <p><input type="password" id="newinputpass"
+                          name="newpass" placeholder="New Password" required> <input type="checkbox" onclick="maskFunction()"></p>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" >Save changes</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row cb-slideshow-text-container ">
+            <div class= "tm-content col-xl-6 col-sm-8 col-xs-8 ml-auto section">
+                <header class="mb-5"><h1 id="options" data-toggle="modal" data-target="#myModal">Welcome  {% if displayuser %} {{ displayuser }} {% else %} {{ user }} {% endif %} !</h1></header>
+                <h4 class="mb-5">{% if results > 0 %} We have {{ results }}  orders. Hurry up !!! {% else %} Boring day !!! {% endif %}</h4>
+                <P class="mb-5">Last login: {{ timelogin }}
+                    <a href="{{ url_for('logout') }}">
+                        <img style="margin-left: 10px" src="{{ url_for('static',filename='logout.png') }}" alt="logout">
+                    </a>
+                </P>
+
+            </div>
+        </div>
+        <div class="footer-link">
+            <p>Copyright © 2021 By APE </p>
+            <p>Developed by: Techinno</p>
+        </div>
+    </div>
+
+</body>
+<script type="text/javascript"src="{{ url_for('static',filename='particles.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='app.js') }}"></script>
+<script>
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("options");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+</script>
+<script>
+    const actualBtn = document.getElementById('actual-btn');
+
+    const fileChosen = document.getElementById('file-chosen');
+
+    actualBtn.addEventListener('change', function(){
+      fileChosen.textContent = this.files[0].name
+    })
+</script>
+<script>
+    function maskFunction() {
+        var x = document.getElementById("curinputpass");
+        var y = document.getElementById("newinputpass");
+        if (x.type === "password") {
+            x.type = "text";
+            y.type = "text";
+        } else {
+            x.type = "password";
+            y.type = "password";
+        }
+    }
+</script>
+<script>
+    $(document).ready(function() {
+        setTimeout(function() {
+            $('.login_mes').fadeOut('slow');
+            }, 3000);})
+</script>
+</html>

@@ -16,6 +16,7 @@ class Configuration(metaclass=MetaFlaskEnv):
     WTF_CSRF_SECRET_KEY = "adminonlineshopsecretkey"
     WTF_CSRF_TIME_LIMIT = 604800
     COOKIE = "ADMIN-ONLINE-SHOP-KEY"
+    ADMIN_USER = "USER"
     HOST = "127.0.0.1"
     DB = "online-shop"
     USERS = "admin"
@@ -127,24 +128,32 @@ def get_items():
     conn.close()
     return results
 
-# def displayfunction(viewstate={}):
-#     if len(viewstate) == 0:
+def displayfunction(viewstate):
+    orders = []
+    user = request.cookies.get(app.config['ADMIN_USER'])
+    if len(viewstate) == 0:
+        try:
+            orders = get_items()
+        except Exception as e:
+            pass
+    viewstate = from_python_to_js_serialization(viewstate)
+    numbResults = len(orders)
+    return render_template('menu.html', user=user, viewstate=viewstate, results=numbResults)
 
 
-
-def login(form):
+def login_function(form):
     user_name = form.username.data
     user_pass = form.password.data
     ph = argon2.PasswordHasher()
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select password, apikey from {Configuration.USERS_TABLE} where username = %s LIMIT 1"
+    mysql_select_query = f"select password, apikey, username from {Configuration.USERS_TABLE} where username = %s LIMIT 1"
     c.execute(mysql_select_query, (user_name,))
     record = c.fetchone()
     if record is not None:
         try:
             if ph.verify(record[0], user_pass) is True:
-                ret = {'apikey': record[1],'message':'authsuccess'}
+                ret = {'apikey': record[1], 'user': record[2], 'message':'authsuccess'}
                 code = 200
         except (argon2.exceptions.VerifyMismatchError, argon2.exceptions.VerificationError):
             ret = {'message': 'Login incorrect'}
@@ -156,10 +165,14 @@ def login(form):
     conn.close()
     return ret, code
 
-@app.route('/menu', methods=['GET', 'POST'])
+@app.route('/')
+def root():
+    resp = redirect(url_for('login'))
+    return resp
+
+@app.route('/menu', methods=['GET'])
 def menu():
-    results = get_items()
-    return render_template('login.html')
+    return displayfunction(viewstate={})
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -167,24 +180,34 @@ def login():
     if form.validate_on_submit():
         # Make openapi login query with username and password
         try:
-            login_systems = login(form)
-            if login_systems[2] == 200:
+            login_systems = login_function(form)
+            if login_systems[1] == 200:
                 # If response is code 200 --> get apikey and set cookie
-                resp = make_response(redirect("/menu"))
+                resp = make_response(redirect("menu"))
+                resp.set_cookie(key=app.config['ADMIN_USER'], value=login_systems[0]['user'], max_age=300, path='/')
             else:
                 # If response is code 401 --> redirect to error login page
-                flash('Login incorrect')
+                flash(f"{login_systems[0]['message']}")
                 resp = render_template('login.html', form=form)
             return resp
         except Exception as e:
-            flash('Login incorrect')
+            flash(f"{str(e)}")
             return render_template('login.html', form=form)
     return render_template('login.html', form=form)
 
+@app.route('/logout')
+def logout():
+    resp = make_response(render_template('login.html', form=LoginForm(), message="Session Expired"))
+    resp.set_cookie(key=app.config['ADMIN_USER'], max_age=0)
+    return resp
 
-
-
-
+@app.route('/data', methods=['GET', 'POST'])
+def data():
+    try:
+        datas = get_items()
+    except Exception as e:
+        pass
+    return render_template('data.html', datas=datas)
 
 try:
     app.config.from_pyfile('settings.cfg')

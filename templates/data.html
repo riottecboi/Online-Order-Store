@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie-edge">
     <title>Data</title>
-    <link rel = "icon" href =
-"https://media.geeksforgeeks.org/wp-content/cdn-uploads/gfg_200X200.png"
-        type = "image/x-icon">
+    <link rel = "icon" sizes="152x152" href = "{{ url_for('static',filename='test.png') }}" type = "image/x-icon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
@@ -17,10 +15,6 @@
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/style.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/animate.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/all.css') }}">
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/fontawesome.css') }}">
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/brands.css') }}">
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/solid.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/demo.css') }}" />
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -94,12 +88,11 @@
     {% endwith %}
     <div class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="navbar-nav">
-            <a class="nav-item nav-link" href="{{ url_for('menu') }}">LOGO</a>
+            <a class="nav-item nav-link" href="{{ url_for('menu') }}">Control Panel</a>
             {#<img src="{{ url_for('static',filename='close.png') }}">#}
         </div>
         <div class="navbar-nav">
             <a class="nav-item nav-link" style="padding-left: 5.5rem;padding-right: 5.5rem" href="{{ url_for('menu') }}">Home</a>
-            <a class="nav-item nav-link" style="padding-left: 0.5rem;padding-right: 0.5rem" data-toggle="modal" data-target="#uploadfile">Add</a>
         </div>
 
         <form class="search" action="/search" method="post">
@@ -110,42 +103,41 @@
         </form>
 
     </div>
-    <div class="modal" id="uploadfile" style="color: black">
+    {% for data in datas %}
+    <div class="modal" id="item{{ data['identified'] }}" style="color: black">
       <div class="modal-dialog">
         <div class="modal-content">
 
           <!-- Modal Header -->
           <div class="modal-header" style="background-color: #3298D4;color: white;">
-            <h4 class="modal-title">Adding data</h4>
+            <h4 class="modal-title">List of order</h4>
             <button type="button" class="close" data-dismiss="modal">&times;</button>
           </div>
-
           <!-- Modal body -->
-          <form id="uploadfileform" action="" method="post" enctype = "multipart/form-data">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-              <input type="hidden" name="viewstate" value="{{ viewstate }}">
-            <div class="modal-body">
-                <h5>File name</h5>
-                <p><input type="text" id="filename"
-                          name="filename" placeholder="Input filename" required>
-                </p>
-                <hr>
-                <p>
-                    <input type="file" name='file' id="actual-btn" accept=".xlsx, .xls" hidden required>
-                    <label for="actual-btn" style="background-color: #3298D4; color: white; padding: 0.5rem; font-family: sans-serif; border-radius: 0.3rem; cursor: pointer; margin-top: 1rem;">
-                        Choose File</label>
-                    <span id="file-chosen">No file chosen</span>
-                </p>
+            <div class="table_content">
+                <table>
+                    <thead>
+                    <tr>
+                        <td><h5>Item</h5></td>
+                        <td><h5>Quantity</h5></td>
+                    </tr>
+                    </thead>
+                    {% for detail in data['detail'] %}
+                    <tr>
+                        <td>{{detail['item']}}</td>
+                        <td>{{detail['quantity']}}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
             </div>
               <!-- Modal footer -->
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary" >Upload</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
-          </form>
         </div>
       </div>
     </div>
+    {% endfor %}
     <div id="particles-js">
         <div class="content_home">
 		<div class="wrap ontop90">
@@ -161,6 +153,7 @@
 							<th>Address</th>
 							<th>City</th>
                             <th>Payment</th>
+                            <th>Total</th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -173,14 +166,9 @@
                             <td>{{ data['address'] }}</td>
                             <td>{{ data['city'] }}</td>
                             <td>{{ data['payment'] }}</td>
+                            <td>{{ data['total'] }}</td>
                             <td>
-                                <table>
-                                    {% for detail in data['detail'] %}
-                                    <tr>
-                                        {{detail['item']}}: {{detail['quantity']}}
-                                    </tr>
-                                    {% endfor %}
-                                </table>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}">details</button>
                             </td>
                         </tr>
                         {% endfor %}

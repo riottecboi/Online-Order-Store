@@ -112,7 +112,7 @@ def get_items():
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select name, email, phone, address, city, payment, total from " \
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total from " \
                          f"{app.config['ORDERS_TABLE']} where identified = %s"
     orders = get_orders()
     for order in orders:
@@ -122,8 +122,8 @@ def get_items():
             quantity.append(get_name_item(id))
         c.execute(mysql_select_query, (order[0],))
         resp = c.fetchone()
-        results.append({'name': resp[0], 'email': resp[1], 'phone': resp[2], 'address': resp[3], 'city': resp[4], 'payment': resp[5],
-                        'detail': quantity})
+        results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
+                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'detail': quantity})
     c.close()
     conn.close()
     return results

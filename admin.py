@@ -135,10 +135,11 @@ def displayfunction(viewstate):
         try:
             orders = get_items()
         except Exception as e:
+            flash('Error: {}'.format(str(e)))
             pass
     viewstate = from_python_to_js_serialization(viewstate)
     numbResults = len(orders)
-    return render_template('menu.html', user=user, viewstate=viewstate, results=numbResults)
+    return render_template('index.html', user=user, viewstate=viewstate, results=numbResults, datas=orders)
 
 
 def login_function(form):
@@ -170,7 +171,7 @@ def root():
     resp = redirect(url_for('login'))
     return resp
 
-@app.route('/menu', methods=['GET'])
+@app.route('/menu', methods=['GET', 'POST'])
 def menu():
     return displayfunction(viewstate={})
 
@@ -200,14 +201,6 @@ def logout():
     resp = make_response(render_template('login.html', form=LoginForm(), message="Session Expired"))
     resp.set_cookie(key=app.config['ADMIN_USER'], max_age=0)
     return resp
-
-@app.route('/data', methods=['GET', 'POST'])
-def data():
-    try:
-        datas = get_items()
-    except Exception as e:
-        pass
-    return render_template('data.html', datas=datas)
 
 try:
     app.config.from_pyfile('settings.cfg')

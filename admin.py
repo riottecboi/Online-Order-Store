@@ -185,7 +185,7 @@ def login():
                 # If response is code 200 --> get apikey and set cookie
                 resp = make_response(redirect("menu"))
                 resp.set_cookie(key=app.config['ADMIN_USER'], value=login_systems[0]['user'], max_age=300, path='/')
-            else:
+            else: 
                 # If response is code 401 --> redirect to error login page
                 flash(f"{login_systems[0]['message']}")
                 resp = render_template('login.html', form=form)

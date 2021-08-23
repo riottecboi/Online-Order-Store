@@ -1,3 +1,18 @@
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
+  `displayname` varchar (32) COLLATE utf8_unicode_ci NOT NULL,
+  `password` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+  `apikey` varchar(40) COLLATE utf8_unicode_ci NOT NULL,
+  `enable` tinyint(1) NOT NULL DEFAULT '1',
+  UNIQUE KEY `classify_idx` (`username`),
+  PRIMARY KEY (`id`),
+  KEY `username_idx` (`username`),
+  KEY `apikey_idx` (`apikey`) USING BTREE,
+  KEY `enable_idx` (`enable`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 DROP TABLE IF EXISTS `items`;
 CREATE TABLE `items` (
     `id` int(10) NOT NULL AUTO_INCREMENT,

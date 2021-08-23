@@ -1,0 +1,542 @@
+/* The Modal (background) */
+.m_modalmod {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.m_modal {
+    position: absolute;
+    width: 500px;
+    height: 320px;
+    /* left: 450px;
+    top: 16px; */
+
+    background: #F7F7FC;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+/* Modal Content */
+.m_modal .m_modal-content {
+    /*  background-color: #fefefe; */
+    margin: 80px;
+    padding: 10px;
+    /*  border: 1px solid #888; */
+    width: 2%;
+}
+
+
+/* The Close Button */
+.m_close {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    /* left: 460px;
+    top: 30px; */
+}
+
+.m_inputbox {
+    position: absolute;
+    width: 280px;
+    padding: 12px;
+    height: 30px;
+    left: 120px;
+    top: 40px;
+
+    text-align: left;
+
+    border: 2px solid #130040;
+    box-sizing: border-box;
+    border-radius: 20px;
+
+}
+
+.m_inputtext {
+    position: absolute;
+    width: 260px;
+    height: 20px;
+    left: 18px;
+    top: 5px;
+
+    background-color: transparent;
+    border-width: 0px;
+
+
+    /* size 16, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+
+    opacity: 1;
+}
+
+/*---CHECKBOX---*/
+/* The container */
+.m_container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 22px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+
+}
+
+/* Hide the browser's default checkbox */
+.m_container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+
+
+}
+
+/* Create a custom checkbox */
+.m_checkmark {
+    position: absolute;
+
+    height: 25px;
+    width: 25px;
+    background-color: #F7F7FC;
+
+    left: -15px;
+    top: 70px;
+    border: 2px solid #130040;
+    box-sizing: border-box;
+}
+
+/* On mouse-over, add a grey background color */
+.m_container:hover input ~ .m_checkmark {
+    background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.m_container input:checked ~ .m_checkmark {
+    background-color: rgb(41, 53, 61);
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.m_checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show the checkmark when checked */
+.m_container input:checked ~ .m_checkmark:after {
+    display: block;
+}
+
+/* Style the checkmark/indicator */
+.m_container .m_checkmark:after {
+    left: 7px;
+    top: 5px;
+    width: 5px;
+    height: 7px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.m_modal .m_showpass {
+    position: relative;
+    width: 136px;
+    height: 20px;
+    left: 30px;
+    top: 60px;
+
+    /* size 16, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+.m_submitbut {
+
+    position: relative;
+    width: 200px;
+    height: 40px;
+    left: -20px;
+    right: 0%;
+    top: 75px;
+    background: #130040;
+    border-radius: 20px;
+    color: white;
+
+    /*  padding: 16px 32px;
+     text-decoration: none;
+     margin: 4px 2px; */
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+
+    align-items: center;
+    text-align: center;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+.m_comm_submitbut {
+
+    position: inherit;
+    width: 200px;
+    height: 40px;
+    left: -20px;
+    right: 0%;
+    top: 75px;
+    background: #130040;
+    border-radius: 20px;
+    color: white;
+
+    /*  padding: 16px 32px;
+     text-decoration: none;
+     margin: 4px 2px; */
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+
+    align-items: center;
+    text-align: center;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+/*----END CB----*/
+/* Change saved successfully! */
+
+.m_notice {
+    position: absolute;
+    width: 274px;
+    height: 10px;
+    left: 75px;
+    top: 260px;
+
+    /* size 12, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 15px;
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+/* or */
+
+.m_ortext {
+    position: absolute;
+    width: 17px;
+    height: 20px;
+    left: 340px;
+    top: 20px;
+
+    /* size 16, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 23px;
+    line-height: 20px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+/* 3 Tags for Facebook Scanner */
+
+.m_titletag {
+    position: absolute;
+    width: 500px;
+    height: 22px;
+    left: 50px;
+    top: 20px;
+
+    /* size 18, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 18px;
+    line-height: 22px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+.m_comm_titletag {
+    position: inherit;
+    width: 500px;
+    height: fit-content;
+    left: 50px;
+    top: 20px;
+
+    /* size 18, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 18px;
+    line-height: 22px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+/* tag button */
+.m_tagbutton {
+
+    position: absolute;
+    display: flex;
+    flex-wrap: nowrap;
+    min-width: 50px;
+    max-width: 300px;
+    height: 26px;
+
+
+    background-color: #EDE9FF;
+    border-radius: 20px;
+}
+
+/* Analytics */
+
+.m_tagbutton .m_analytics {
+    /* position: absolute; */
+    margin: 10px;
+    text-align: center;
+    width: 100%;
+    /* height: 20px; */
+
+
+    /* size 16, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    text-align: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+.m_tagbutton .m_close {
+
+    margin: 5px;
+    text-align: center;
+    width: 10%;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    /* position: relative; */
+    /* width: 12px;
+    height: 12px; */
+    /* left: 460px;
+    top: 30px; */
+}
+
+.m_modalcomment {
+    position: absolute;
+    width: 500px;
+    height: inherit;
+    left: 450px;
+    top: 1024px;
+
+    background: #F7F7FC;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.m_modalcomment .m_modal-content {
+    /*  border: 1px solid #888; */
+    height: 80%;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+.m_username {
+    /* Username */
+    position: inherit;
+
+
+    /* size 12, semibold */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+    display: inline-block;
+    text-align: left;
+    align-items: center;
+    letter-spacing: 0.01em;
+    margin-top: 20px;
+    color: #130040;
+}
+
+.m_datetime {
+    position: inherit;
+
+    /* size 12, regular */
+    display: inline-block;
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+    align-items: center;
+    letter-spacing: 0.01em;
+    text-align: right;
+    color: #130040;
+}
+
+.m_addcomment {
+    position: inherit;
+    width: 460px;
+    padding: 12px;
+    height: 127px;
+
+    text-align: left;
+
+    border: 2px solid #130040;
+    box-sizing: border-box;
+    border-radius: 20px;
+}
+
+.m_comment1 {
+    position: inherit;
+    width: 400px;
+
+
+    /* size 16, regular */
+
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+    /* identical to box height */
+
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.01em;
+
+    color: #130040;
+}
+
+.m_comment1 .more-text{
+    display: none;
+}
+
+.read-more {
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    color: blue;
+}
+
+.m_close:hover,
+.m_close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+.login_mes{
+    background: #ebfff0;
+    padding: 20px 35px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #747885;
+    margin: 0 10%;
+    border-radius: 5px;
+    line-height: 30px;
+    opacity: 0;
+    height: 0;
+    transition: all 1s ease-out;
+}
+.login_mes.active{
+    position: fixed;
+    opacity: 1;
+    height: auto;
+    left: 50%;
+    top: 45%;
+    margin: 0 auto;
+    z-index: 1;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+.login_mes i{
+    vertical-align: center;
+    color: #2bda2a;
+    font-size: 30px;
+    float: left;
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie-edge">
+    <title>Data</title>
+    <link rel = "icon" sizes="152x152" href = "{{ url_for('static',filename='test.png') }}" type = "image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/modal.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/style.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/animate.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/all.css') }}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<style>
+    .search {
+    margin-left: auto;
+    margin-right: 0;
+}
+   .search > div {
+  display: inline-block;
+  position: relative;
+  filter: drop-shadow(0 1px #0091c2);
+}
+
+.search > div:after {
+  content: "";
+  background: rgba(0,0,0,.5);
+  width: 2px;
+  height: 10px;
+  position: absolute;
+  top: 22px;
+  right: 0px;
+  transform: rotate(135deg);
+}
+
+.search > div > input {
+  color: rgba(0,0,0,.5);
+  font-size: 14px;
+  background: transparent;
+  width: 25px;
+  height: 25px;
+  outline: none;
+  border-radius: 35px;
+  transition: width 0.5s;
+}
+
+.search > div > input::placeholder {
+  color: rgba(0,0,0,.25);
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.search > div > input:focus::placeholder {
+  opacity: 1;
+}
+
+.search > div > input:focus,
+.search > div > input:not(:placeholder-shown) {
+  width: 250px;
+}
+</style>
+<body class="home" style="background: #3298dc">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="login_mes active">
+            {% if messages|length > 1 %}
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            {% else %}
+                {{ messages[0]}}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% endwith %}
+    <div class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="navbar-nav">
+            <a class="nav-item nav-link" href="{{ url_for('menu') }}">Control Panel</a>
+            {#<img src="{{ url_for('static',filename='close.png') }}">#}
+        </div>
+        <div class="navbar-nav">
+            <a class="nav-item nav-link" style="padding-left: 5.5rem;padding-right: 5.5rem" href="{{ url_for('menu') }}">Home</a>
+        </div>
+
+        <form class="search" action="/search" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div>
+                <input type="text" name="term" placeholder=" Search file, user . . . " required>
+            </div>
+        </form>
+
+    </div>
+    {% for data in datas %}
+    <div class="modal" id="item{{ data['identified'] }}" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #3298D4;color: white;">
+            <h4 class="modal-title">List of order</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <!-- Modal body -->
+            <div class="table_content">
+                <table>
+                    <thead>
+                    <tr>
+                        <td><h5>Item</h5></td>
+                        <td><h5>Quantity</h5></td>
+                    </tr>
+                    </thead>
+                    {% for detail in data['detail'] %}
+                    <tr>
+                        <td>{{detail['item']}}</td>
+                        <td>{{detail['quantity']}}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    <div id="particles-js">
+        <div class="content_home">
+		<div class="wrap ontop90">
+            <div class="table_content">
+                <form action="{{ url_for('data') }}" method="GET">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+							<th>Phone</th>
+							<th>Address</th>
+							<th>City</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in datas %}
+                        <tr>
+                            <td>{{ data['name'] }}</td>
+                            <td>{{ data['email'] }}</td>
+                            <td>{{ data['phone'] }}</td>
+                            <td>{{ data['address'] }}</td>
+                            <td>{{ data['city'] }}</td>
+                            <td>{{ data['payment'] }}</td>
+                            <td>{{ data['total'] }}</td>
+                            <td>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}">details</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </form>
+            </div><!-- end table_content-->
+        </div><!-- end wrap-->
+
+        </div>
+    </div>
+</body>
+<script type="text/javascript"src="{{ url_for('static',filename='particles.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='app.js') }}"></script>
+<script>
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("options");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+</script>
+<script>
+    const actualBtn = document.getElementById('actual-btn');
+
+    const fileChosen = document.getElementById('file-chosen');
+
+    actualBtn.addEventListener('change', function(){
+      fileChosen.textContent = this.files[0].name
+    })
+</script>
+<script>
+    $(document).ready(function() {
+        setTimeout(function() {
+            $('.login_mes').fadeOut('slow');
+            }, 3000);})
+</script>
+</html>

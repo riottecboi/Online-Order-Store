@@ -9,6 +9,60 @@ figure, header, nav, section, article, aside, footer, figcaption {
   border: 0;
   outline: 0;
 }
+
+.table_content{
+    background: #fff;
+    margin-bottom: 30px;
+}
+.table_content table{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table_content table tr th{
+    font-style: normal;
+font-weight: bold;
+font-size: 13px;
+line-height: 19px;
+letter-spacing: 0.01em;
+color: #143569;
+padding: 12px 15px;
+}
+
+.table_content table tr:nth-child(odd) {
+    background-color:#fff;
+    border-bottom: 1px solid #efefef;
+}
+
+.table_content table tr:nth-child(even) {
+    background-color:#F8F8F8;
+    border-bottom: 1px solid #efefef;
+}
+
+.table_content table tr td{
+font-style: normal;
+    font-weight: normal;
+    font-size: 13px;
+    line-height: 19px;
+    letter-spacing: 0.01em;
+    color: #2D2F32;
+    padding:12px 15px;
+
+}
+
+.content_home{
+    padding-top: 45px;
+    border-top:1px solid #96B8ED;
+    background: #3298dc;
+}
+
+.wrap {margin:0 auto;width:1180px;text-align:left;position:relative;max-width:94%;}
+.wrap {
+    width: 90%;
+    margin: 0 auto;
+    position: relative;
+}
+
 .btn {
     border: none;
     outline: none;

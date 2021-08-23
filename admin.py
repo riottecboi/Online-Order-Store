@@ -10,6 +10,9 @@ from wtforms.validators import DataRequired
 import argon2
 import json
 import base64
+from filedownload import FileDownload
+from fileupload import FileUpload
+
 
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "adminonlineshopsecretkey"
@@ -27,6 +30,11 @@ class Configuration(metaclass=MetaFlaskEnv):
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
     USERS_TABLE = "users"
+    MINIO_API_URL = "34.71.225.137:9000"
+    MINIO_ACCESS_KEY = "socratesaccesskey"
+    MINIO_SECRET_KEY = "socratessecretkey2020"
+    MINIO_SECURE = False
+    MINIO_BUCKET_NAME = "test"
 
 app = Flask(__name__)
 csrf = CSRFProtect(app)
@@ -64,6 +72,22 @@ def from_python_to_js_serialization(pythondict):
     :return:
     """
     return base64.b64encode(json.dumps(pythondict).encode('utf-8'))
+
+def get_products():
+    response = []
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select id, title, description, price from {app.config['ITEMS_TABLE']}"
+    c.execute(mysql_select_query)
+    products = c.fetchall()
+    if len(products) != 0:
+        for product in products:
+            resp = {'id':product[0], 'title': product[1], 'description': product[2], 'price': product[3]}
+            response.append(resp)
+    c.close()
+    conn.close()
+    return response
+
 
 def get_name_item(itemid):
     conn = cnxpool.get_connection()
@@ -202,10 +226,31 @@ def logout():
     resp.set_cookie(key=app.config['ADMIN_USER'], max_age=0)
     return resp
 
+@app.route('/admin_products', methods=['GET', 'POST'])
+def admin_products():
+    user = request.cookies.get(app.config['ADMIN_USER'])
+    file = download.download_file('chunn.jpg', bucket_name='test')
+    img = base64.b64encode(file['data']).decode('ascii')
+    content_type = file['content_type']
+    products = get_products()
+    return render_template('admin-products.html', products=products, file=img, type=content_type, user=user)
+
 try:
     app.config.from_pyfile('settings.cfg')
 except FileNotFoundError:
     app.config.from_object(Configuration)
+
+upload = FileUpload(**{'api_minio_url': app.config['MINIO_API_URL'],
+                       'access_key': app.config['MINIO_ACCESS_KEY'],
+                       'secret_key': app.config['MINIO_SECRET_KEY'],
+                       'minio_secure': app.config['MINIO_SECURE'],
+                       'bucket_name':app.config['MINIO_BUCKET_NAME']})
+
+download = FileDownload(**{'api_minio_url': app.config['MINIO_API_URL'],
+                           'access_key': app.config['MINIO_ACCESS_KEY'],
+                           'secret_key': app.config['MINIO_SECRET_KEY'],
+                           'minio_secure': app.config['MINIO_SECURE']})
+
 cnxpool = mysql.connector.pooling.MySQLConnectionPool(pool_name="admin-online",
                                                           host=app.config['HOST'],
                                                           database=app.config['DB'],

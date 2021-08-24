@@ -16,6 +16,11 @@
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
    </head>
   <style>
+    #file-chosen{
+      color: darkgray;
+      margin-left: 0.3rem;
+      font-family: sans-serif;
+    }
       .information {
 	border: none;
 	background: #0A2558;
@@ -39,9 +44,60 @@
   }
   </style>
 <body>
+  <div class="modal" id="uploadfile" style="color: black">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <!-- Modal Header -->
+        <div class="modal-header" style="background-color: #0A2558;color: white;">
+          <h4 class="modal-title">Adding data</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <!-- Modal body -->
+        <form id="uploadfileform" action="/additem" method="post" enctype = "multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="viewstate" value="{{ viewstate }}">
+          <div class="modal-body">
+              <h5>Item's name:</h5>
+              <p>
+                <input type="text" id="name" name="name" placeholder=" Input filename" required>
+              </p>
+              <hr>
+              <h5>Item's description:</h5>
+              <p>
+                <textarea type="text" id="description" name="description" placeholder=" Type some description (128 words)" rows="5" cols="22" required></textarea>
+              </p>
+              <hr>
+              <h5>Item's price:</h5>
+              <p>
+                <input type="number" id="price" name="price" placeholder=" Input price" required>
+              </p>
+              <hr>
+              <h5>Item's profile image:</h5>
+              <p>
+                <input type="file" name='profileimg' id="profileimg" accept="image/*" required>
+              </p>
+              <hr>
+              <h5>Item's images:</h5>
+              <p>
+                <input type="file" name='files' id="files" multiple accept="image/*" required>
+              </p>
+          </div>
+            <!-- Modal footer -->
+          <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" style="background-color: #0A2558;color: white;">Add item</button>
+              <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   <div class="sidebar">
     <div class="logo-details">
-      <i class='bx bxl-c-plus-plus'></i>
+      <a href="{{url_for('menu')}}">
+        <i class='bx bxs-home'></i>
+      </a>
       <span class="logo_name">ControlPanel</span>
     </div>
       <ul class="nav-links">
@@ -82,11 +138,15 @@
       <div class="sidebar-button">
         <i class='bx bx-menu sidebarBtn'></i>
         <span class="dashboard">Product</span>
+        <i></i>
+        <i class='bx bxs-file-plus' data-toggle="modal" data-target="#uploadfile"></i>
       </div>
       <div class="profile-details">
         <span class="admin_name"> Welcome back <b> {{user}}</b></span>
       </div>
     </nav>
+    <div></div>
+    <br>
     {% for product in products %}
       <div class="modal" id="item{{ product['id'] }}" style="color: black">
         <div class="modal-dialog">
@@ -126,7 +186,11 @@
       <div class="overview-boxes">
         {% for product in products %}
           <div class="right-side" style="margin-bottom: 50px">
-            <img src='data:{{ type }};base64, {{ file }}' width="500" height="600"/>
+              {% if product['hasimg'] == True %}
+                <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="500" height="600"/>
+              {% else %}
+                <img src="static/default.png" alt="default-image">
+              {% endif %}
             <br>
             <br>
             <div class="button_cont" align="center">
@@ -138,17 +202,27 @@
     </div>
 
   </section>
-  <script>
-    let sidebar = document.querySelector(".sidebar");
-    let sidebarBtn = document.querySelector(".sidebarBtn");
-    sidebarBtn.onclick = function() {
-    sidebar.classList.toggle("active");
-    if(sidebar.classList.contains("active")){
-      sidebarBtn.classList.replace("bx-menu" ,"bx-menu-alt-right");
-    }else
-      sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
-    }
- </script>
+<script>
+   $(function(){
+      $("input[type = 'submit']").click(function(){
+         var $fileUpload = $("input[type='file']");
+         if (parseInt($fileUpload.get(0).files.length) > 3){
+            alert("You are only allowed to upload a maximum of 3 files");
+         }
+      });
+   });
+</script>
+<script>
+  let sidebar = document.querySelector(".sidebar");
+  let sidebarBtn = document.querySelector(".sidebarBtn");
+  sidebarBtn.onclick = function() {
+  sidebar.classList.toggle("active");
+  if(sidebar.classList.contains("active")){
+    sidebarBtn.classList.replace("bx-menu" ,"bx-menu-alt-right");
+  }else
+    sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+  }
+</script>
 <script>
     // Get the modal
     var modal = document.getElementById("myModal");

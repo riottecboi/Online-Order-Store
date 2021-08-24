@@ -53,9 +53,9 @@ class FileUpload():
             self.minioClient.fput_object(bucket_name=self.bucket_name, object_name=identify, file_path=file,
                                          content_type=content_type)
             if self.minio_secure != False:
-                return "minios://{}/{}/{}".format(self.api_minio_url,self.bucket_name,identify)
+                return {'bucket_name': self.bucket_name, 'path': identify}
             else:
-                return "minio://{}/{}/{}".format(self.api_minio_url,self.bucket_name,identify)
+                return {'bucket_name': self.bucket_name, 'path': identify}
         except:
             raise Error('Put file object error')
 

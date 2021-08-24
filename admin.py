@@ -12,7 +12,8 @@ import json
 import base64
 from filedownload import FileDownload
 from fileupload import FileUpload
-
+import os
+import ast
 
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "adminonlineshopsecretkey"
@@ -34,7 +35,8 @@ class Configuration(metaclass=MetaFlaskEnv):
     MINIO_ACCESS_KEY = "socratesaccesskey"
     MINIO_SECRET_KEY = "socratessecretkey2020"
     MINIO_SECURE = False
-    MINIO_BUCKET_NAME = "test"
+    MINIO_BUCKET_NAME = "testlifecycle"
+    UPLOAD_PATH = '/tmp'
 
 app = Flask(__name__)
 csrf = CSRFProtect(app)
@@ -73,16 +75,34 @@ def from_python_to_js_serialization(pythondict):
     """
     return base64.b64encode(json.dumps(pythondict).encode('utf-8'))
 
+def add_product(title, description, price, images):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_update_query = f"insert into {app.config['ITEMS_TABLE']} (title, description, price, images) values (%s,%s,%s,%s)"
+    try:
+        c.execute(mysql_update_query,(title, description, price, images))
+        conn.commit()
+        ret = 'Inserted', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
 def get_products():
     response = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select id, title, description, price from {app.config['ITEMS_TABLE']}"
+    mysql_select_query = f"select id, title, description, price, images from {app.config['ITEMS_TABLE']}"
     c.execute(mysql_select_query)
     products = c.fetchall()
     if len(products) != 0:
         for product in products:
-            resp = {'id':product[0], 'title': product[1], 'description': product[2], 'price': product[3]}
+            if product[4] is not None:
+                images = ast.literal_eval(product[4])
+                resp = {'id':product[0], 'title': product[1], 'description': product[2], 'price': product[3], 'images': images}
+            else:
+                resp = {'id': product[0], 'title': product[1], 'description': product[2], 'price': product[3]}
             response.append(resp)
     c.close()
     conn.close()
@@ -228,12 +248,50 @@ def logout():
 
 @app.route('/admin_products', methods=['GET', 'POST'])
 def admin_products():
+    products = []
     user = request.cookies.get(app.config['ADMIN_USER'])
-    file = download.download_file('chunn.jpg', bucket_name='test')
-    img = base64.b64encode(file['data']).decode('ascii')
-    content_type = file['content_type']
-    products = get_products()
-    return render_template('admin-products.html', products=products, file=img, type=content_type, user=user)
+    items = get_products()
+    for product in items:
+        if 'images' in product:
+            profileimg = product['images']['profile']['path']
+            bucket_name = product['images']['profile']['bucket_name']
+            file = download.download_file(profileimg, bucket_name=bucket_name)
+            product['img'] = base64.b64encode(file['data']).decode('ascii')
+            product['content_type'] = file['content_type']
+            product['hasimg'] = True
+            product.pop('images')
+        else:
+            product['hasimg'] = False
+        products.append(product)
+    return render_template('admin-products.html', products=products, user=user)
+
+@app.route('/additem', methods=['POST'])
+def additem():
+    profile = {}
+    images = []
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+        price = request.form.get('price')
+        profileimg = request.files.get('profileimg')
+        filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
+        profileimg.save(filepath)
+        resp = upload.upload_file(filepath, profileimg.content_type)
+        profile['profile'] = resp
+        os.remove(filepath)
+        files = request.files.getlist('files')
+        for file in files:
+            filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
+            file.save(filepath)
+            resp = upload.upload_file(filepath, file.content_type)
+            images.append(resp)
+            os.remove(filepath)
+        profile['images'] = images
+        update = add_product(name,description,int(price),str(profile))
+        if update[1] == 200:
+            return render_template('admin-products.html')
+
+    return render_template('admin-products.html')
 
 try:
     app.config.from_pyfile('settings.cfg')

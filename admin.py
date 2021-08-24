@@ -255,11 +255,14 @@ def admin_products():
         if 'images' in product:
             profileimg = product['images']['profile']['path']
             bucket_name = product['images']['profile']['bucket_name']
-            file = download.download_file(profileimg, bucket_name=bucket_name)
-            product['img'] = base64.b64encode(file['data']).decode('ascii')
-            product['content_type'] = file['content_type']
-            product['hasimg'] = True
             product.pop('images')
+            try:
+                file = download.download_file(profileimg, bucket_name=bucket_name)
+                product['img'] = base64.b64encode(file['data']).decode('ascii')
+                product['content_type'] = file['content_type']
+                product['hasimg'] = True
+            except:
+                product['hasimg'] = False
         else:
             product['hasimg'] = False
         products.append(product)
@@ -289,10 +292,10 @@ def additem():
         profile['images'] = images
         update = add_product(name,description,int(price),str(profile))
         if update[1] == 200:
-            return render_template('admin-products.html')
-
-    return render_template('admin-products.html')
-
+            flash('Added successful')
+        else:
+            flash('Add item failed')
+    return redirect("admin_products")
 try:
     app.config.from_pyfile('settings.cfg')
 except FileNotFoundError:

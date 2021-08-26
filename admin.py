@@ -89,11 +89,30 @@ def add_product(title, description, price, images):
     conn.close()
     return ret
 
+def get_product_by_id(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select * from {app.config['ITEMS_TABLE']} where id=%s"
+    c.execute(mysql_select_query, (id,))
+    product = c.fetchone()
+    if product is not None:
+        if product[4] is not None:
+            images = ast.literal_eval(product[4])
+            resp = {'id': product[0], 'title': product[1], 'description': product[2], 'price': product[3],
+                    'images': images}
+        else:
+            resp = {'id': product[0], 'title': product[1], 'description': product[2], 'price': product[3]}
+    else:
+        resp = {}
+    c.close()
+    conn.close()
+    return resp
+
 def get_products():
     response = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select id, title, description, price, images from {app.config['ITEMS_TABLE']}"
+    mysql_select_query = f"select * from {app.config['ITEMS_TABLE']}"
     c.execute(mysql_select_query)
     products = c.fetchall()
     if len(products) != 0:
@@ -268,6 +287,42 @@ def admin_products():
         products.append(product)
     return render_template('admin-products.html', products=products, user=user)
 
+@app.route('/edititem', methods=['POST'])
+def edititem():
+    hasImg = False
+    profile = {}
+    images = []
+    product = get_product_by_id(request.form.get('itemid'))
+    name = product['title']
+    description = product['description']
+    price = product['price']
+    if 'images' in product:
+        profile_db = product['images']
+        hasImg = True
+    if request.method == 'POST':
+        if 'editname' in request.args:
+            name = request.form.get('name')
+        if 'editdescription' in request.args:
+            description = request.form.get('editdescription')
+        if 'editprice' in request.args:
+            price = request.form.get('editprice')
+        if 'editprofileimg' in request.args:
+            profileimg = request.files.get('profileimg')
+            filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
+            profileimg.save(filepath)
+            resp = upload.upload_file(filepath, profileimg.content_type)
+            profile['profile'] = resp
+            os.remove(filepath)
+        if 'editfiles' in request.args:
+            files = request.files.getlist('files')
+            for file in files:
+                filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
+                file.save(filepath)
+                resp = upload.upload_file(filepath, file.content_type)
+                images.append(resp)
+                os.remove(filepath)
+            profile['images'] = images
+
 @app.route('/additem', methods=['POST'])
 def additem():
     profile = {}
@@ -290,8 +345,8 @@ def additem():
             images.append(resp)
             os.remove(filepath)
         profile['images'] = images
-        update = add_product(name,description,int(price),str(profile))
-        if update[1] == 200:
+        add = add_product(name,description,int(price),str(profile))
+        if add[1] == 200:
             flash('Added successful')
         else:
             flash('Add item failed')

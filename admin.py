@@ -75,12 +75,12 @@ def from_python_to_js_serialization(pythondict):
     """
     return base64.b64encode(json.dumps(pythondict).encode('utf-8'))
 
-def add_product(title, description, price, images):
+def update_product(id, title, description, price, images):
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_update_query = f"insert into {app.config['ITEMS_TABLE']} (title, description, price, images) values (%s,%s,%s,%s)"
+    mysql_update_query = f"update {app.config['ITEMS_TABLE']} set title=%s, description=%s, price=%s, images=%s where id=%s"
     try:
-        c.execute(mysql_update_query,(title, description, price, images))
+        c.execute(mysql_update_query,(title, description, price, images, id))
         conn.commit()
         ret = 'Inserted', 200
     except Exception as e:
@@ -89,11 +89,45 @@ def add_product(title, description, price, images):
     conn.close()
     return ret
 
+
+def add_product(title, description, price, images):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_add_query = f"insert into {app.config['ITEMS_TABLE']} (title, description, price, images) values (%s,%s,%s,%s)"
+    try:
+        c.execute(mysql_add_query,(title, description, price, images))
+        conn.commit()
+        ret = 'Inserted', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
+def get_product_by_id(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select * from {app.config['ITEMS_TABLE']} where id=%s"
+    c.execute(mysql_select_query, (id,))
+    product = c.fetchone()
+    if product is not None:
+        if product[4] is not None:
+            images = ast.literal_eval(product[4])
+            resp = {'id': product[0], 'title': product[1], 'description': product[2], 'price': product[3],
+                    'images': images}
+        else:
+            resp = {'id': product[0], 'title': product[1], 'description': product[2], 'price': product[3]}
+    else:
+        resp = {}
+    c.close()
+    conn.close()
+    return resp
+
 def get_products():
     response = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select id, title, description, price, images from {app.config['ITEMS_TABLE']}"
+    mysql_select_query = f"select * from {app.config['ITEMS_TABLE']}"
     c.execute(mysql_select_query)
     products = c.fetchall()
     if len(products) != 0:
@@ -249,21 +283,89 @@ def logout():
 @app.route('/admin_products', methods=['GET', 'POST'])
 def admin_products():
     products = []
+    images = []
     user = request.cookies.get(app.config['ADMIN_USER'])
     items = get_products()
     for product in items:
         if 'images' in product:
-            profileimg = product['images']['profile']['path']
-            bucket_name = product['images']['profile']['bucket_name']
-            file = download.download_file(profileimg, bucket_name=bucket_name)
-            product['img'] = base64.b64encode(file['data']).decode('ascii')
-            product['content_type'] = file['content_type']
-            product['hasimg'] = True
+            if 'profile' in product['images']:
+                profileimg = product['images']['profile']['path']
+                bucket_name = product['images']['profile']['bucket_name']
+                try:
+                    file = download.download_file(profileimg, bucket_name=bucket_name)
+                    product['img'] = base64.b64encode(file['data']).decode('ascii')
+                    product['content_type'] = file['content_type']
+                    product['profilehasimg'] = True
+                except:
+                    product['profilehasimg'] = False
+            else:
+                product['profilehasimg'] = False
+            if 'images' in product['images']:
+                if len(product['images']['images']) != 0:
+                    for p in product['images']['images']:
+                        try:
+                            file = download.download_file(p['path'], p['bucket_name'])
+                            img = base64.b64encode(file['data']).decode('ascii')
+                            content_type = file['content_type']
+                            images.append({'img': img, 'content_type': content_type, 'hasimg': True})
+                        except:
+                            product['hasimg'] = False
+                    product['imgs'] = images
+                    product['hasimg'] = True
+                else:
+                    product['hasimg'] = False
             product.pop('images')
         else:
+            product['profilehasimg'] = False
             product['hasimg'] = False
         products.append(product)
     return render_template('admin-products.html', products=products, user=user)
+
+@app.route('/edititem', methods=['POST'])
+def edititem():
+    profile = {}
+    images = []
+    product = get_product_by_id(request.form.get('itemid'))
+    name = product['title']
+    description = product['description']
+    price = product['price']
+    if 'images' in product:
+        profile_db = product['images']
+    if request.method == 'POST':
+        if 'editname' in request.form:
+            name = request.form.get('editname')
+        if 'editdescription' in request.form:
+            description = request.form.get('editdescription')
+        if 'editprice' in request.form:
+            price = request.form.get('editprice')
+        if 'pfimg' in request.files:
+            try:
+                profileimg = request.files.get('pfimg')
+                filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
+                profileimg.save(filepath)
+                resp = upload.upload_file(filepath, profileimg.content_type)
+                profile['profile'] = resp
+                os.remove(filepath)
+            except:
+                profile['profile'] = profile_db['profile']
+        if 'imgs' in request.files:
+            files = request.files.getlist('imgs')
+            try:
+                for file in files:
+                    filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
+                    file.save(filepath)
+                    resp = upload.upload_file(filepath, file.content_type)
+                    images.append(resp)
+                    os.remove(filepath)
+                profile['images'] = images
+            except:
+                profile['images'] = profile_db['images']
+        update = update_product(request.form.get('itemid'),name,description,int(price), str(profile))
+        if update[1] == 200:
+            flash('Updated successful')
+        else:
+            flash('Update item failed')
+    return redirect("admin_products")
 
 @app.route('/additem', methods=['POST'])
 def additem():
@@ -287,12 +389,12 @@ def additem():
             images.append(resp)
             os.remove(filepath)
         profile['images'] = images
-        update = add_product(name,description,int(price),str(profile))
-        if update[1] == 200:
-            return render_template('admin-products.html')
-
-    return render_template('admin-products.html')
-
+        add = add_product(name,description,int(price),str(profile))
+        if add[1] == 200:
+            flash('Added successful')
+        else:
+            flash('Add item failed')
+    return redirect("admin_products")
 try:
     app.config.from_pyfile('settings.cfg')
 except FileNotFoundError:

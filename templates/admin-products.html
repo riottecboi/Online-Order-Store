@@ -133,6 +133,74 @@
         </li>
       </ul>
   </div>
+  {% for product in products %}
+      <div class="modal" id="edit{{ product['id'] }}" style="color: black">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header" style="background-color: #0A2558;color: white;">
+              <h5 class="modal-title">{{ product['title'] }}</h5>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form action="/edititem" method="post" enctype = "multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="itemid" value="{{ product['id'] }}"/>
+                <div class="modal-body">
+                    <div id="profile" style="display: inline-block;">
+                        {% if product['profilehasimg'] == True %}
+                            <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="150" height="150" style="vertical-align:middle"/>
+                        {% else %}
+                            <img src="static/default.png" width="150" height="150" alt="default-image" style="vertical-align:middle">
+                        {% endif %}
+                        <input type="file" name='pfimg' id="pfimg" accept="image/*">
+                    </div>
+                    <hr>
+                    <h5>Item's name:</h5>
+                    <p>
+                        <input type="text" id="editname" name="editname" value="{{ product['title'] }}" size="28">
+                    </p>
+                    <hr>
+                    <h5>Item's description:</h5>
+                    <p>
+                        <textarea type="text" id="editdescription" name="editdescription" rows="5" cols="30">{{ product['description'] }}</textarea>
+                    </p>
+                    <hr>
+                    <h5>Item's price:</h5>
+                    <p>
+                        <input type="number" id="editprice" name="editprice" value="{{ product['price'] }}">
+                    </p>
+                    <hr>
+                    {% if product['hasimg'] == True %}
+                    <h5>Current item's images:</h5>
+                    <div id="images" style="display: inline-block;">
+                        {% for img in product['imgs'] %}
+                            <span style="vertical-align:middle">
+                            {% if img['hasimg'] == True %}
+                                <img src="data:{{ img['content_type'] }};base64, {{ img['img'] }}" width="100" height="100" style="vertical-align:middle"/>
+                            {% else %}
+                                <img src="static/default.png" width="100" height="100" alt="default-image" style="vertical-align:middle">
+                            {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <h5>No item's images found</h5>
+                    {% endif %}
+                    <hr>
+                    <p>
+                        <input type="file" name='imgs' id="imgs" multiple accept="image/*">
+                    </p>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary" style="background-color: #0A2558;color: white;">Save change</button>
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+  {% endfor %}
   <section class="home-section">
     <nav>
       <div class="sidebar-button">
@@ -176,6 +244,7 @@
               </div>
                 <!-- Modal footer -->
               <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#edit{{ product['id'] }}" data-dismiss="modal" style="background-color: #0A2558;color: white;">Edit item</button>
                   <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
               </div>
           </div>
@@ -186,7 +255,7 @@
       <div class="overview-boxes">
         {% for product in products %}
           <div class="right-side" style="margin-bottom: 50px">
-              {% if product['hasimg'] == True %}
+              {% if product['profilehasimg'] == True %}
                 <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="500" height="600"/>
               {% else %}
                 <img src="static/default.png" alt="default-image">

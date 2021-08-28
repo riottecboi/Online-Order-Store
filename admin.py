@@ -283,10 +283,10 @@ def logout():
 @app.route('/admin_products', methods=['GET', 'POST'])
 def admin_products():
     products = []
-    images = []
     user = request.cookies.get(app.config['ADMIN_USER'])
     items = get_products()
     for product in items:
+        images = []
         if 'images' in product:
             if 'profile' in product['images']:
                 profileimg = product['images']['profile']['path']

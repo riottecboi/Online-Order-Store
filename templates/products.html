@@ -92,7 +92,12 @@
                 <div class="col-lg-4">
                     <div class="trainer-item">
                         <div class="image-thumb">
-                            <img src="static/images/product-1-720x480.jpg" alt="">
+                            {% if item['profilehasimg'] == True %}
+                                <img src="data:{{ item['content_type'] }};base64, {{ item['img'] }}" />
+                            {% else %}
+                                <img src="static/default.png" >
+                            {% endif %}
+
                         </div>
                         <div class="down-content">
                             <span>

@@ -4,7 +4,10 @@ from mysql.connector import pooling
 from flask_wtf.csrf import CSRFProtect
 from flask import Flask, render_template, redirect, url_for, make_response, request
 import uuid
-
+from filedownload import FileDownload
+from fileupload import FileUpload
+import base64
+import ast
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "onlineshopsecretkey"
     WTF_CSRF_SECRET_KEY = "onlineshopsecretkey"
@@ -19,6 +22,11 @@ class Configuration(metaclass=MetaFlaskEnv):
     ORDERS_TABLE = "orders"
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
+    MINIO_API_URL = "34.71.225.137:9000"
+    MINIO_ACCESS_KEY = "socratesaccesskey"
+    MINIO_SECRET_KEY = "socratessecretkey2020"
+    MINIO_SECURE = False
+    MINIO_BUCKET_NAME = "testlifecycle"
 
 app = Flask(__name__)
 csrf = CSRFProtect(app)
@@ -33,7 +41,7 @@ def list():
     if len(items) != 0:
         try:
             for item in items:
-                lists.append({'id': item[0], 'title': item[1], 'description': item[2], 'price': item[3]})
+                lists.append({'id': item[0], 'title': item[1], 'description': item[2], 'price': item[3], 'images': item[4]})
             ret = lists, 200
         except Exception as e:
             ret = str(e), 404
@@ -50,7 +58,7 @@ def get_items(id):
     c.execute(mysql_select_query,(id,))
     record = c.fetchone()
     if record is not None:
-        ret = {'id': record[0], 'title': record[1], 'description': record[2], 'price': record[3]}, 200
+        ret = {'id': record[0], 'title': record[1], 'description': record[2], 'price': record[3], 'images': record[4]}, 200
     else:
         ret = {}, 404
     c.close()
@@ -90,14 +98,45 @@ def index():
 @app.route('/products', methods=['GET','POST'])
 def products():
     items = list()
-    return render_template('products.html', items=items[0]), items[1]
+    products = []
+    for product in items[0]:
+        if 'images' in product:
+            product['images'] = ast.literal_eval(product['images'])
+            if 'profile' in product['images']:
+                profileimg = product['images']['profile']['path']
+                bucket_name = product['images']['profile']['bucket_name']
+                try:
+                    file = download.download_file(profileimg, bucket_name=bucket_name)
+                    product['img'] = base64.b64encode(file['data']).decode('ascii')
+                    product['content_type'] = file['content_type']
+                    product['profilehasimg'] = True
+                except:
+                    product['profilehasimg'] = False
+            else:
+                product['profilehasimg'] = False
+            product.pop('images')
+            products.append(product)
+    return render_template('products.html', items=products), items[1]
 
 @app.route('/detail', methods=['GET','POST'])
 def detail():
     datas = []
     id_list = request.args.getlist('itemids')
     for id in id_list:
+        images = []
         item = get_items(id)
+        imgs = ast.literal_eval(item[0]['images'])
+        for p in imgs['images']:
+            try:
+                file = download.download_file(p['path'], p['bucket_name'])
+                img = base64.b64encode(file['data']).decode('ascii')
+                content_type = file['content_type']
+                images.append({'img': img, 'content_type': content_type, 'hasimg': True})
+            except:
+                p['hasimg'] = False
+        item[0].pop('images')
+        item[0]['imgs'] = images
+        item[0]['hasimg'] = True
         if item[1] == 200:
             datas.append(item[0])
     return render_template('product-details.html', items=datas)
@@ -149,6 +188,17 @@ try:
     app.config.from_pyfile('settings.cfg')
 except FileNotFoundError:
     app.config.from_object(Configuration)
+
+upload = FileUpload(**{'api_minio_url': app.config['MINIO_API_URL'],
+                       'access_key': app.config['MINIO_ACCESS_KEY'],
+                       'secret_key': app.config['MINIO_SECRET_KEY'],
+                       'minio_secure': app.config['MINIO_SECURE'],
+                       'bucket_name':app.config['MINIO_BUCKET_NAME']})
+
+download = FileDownload(**{'api_minio_url': app.config['MINIO_API_URL'],
+                           'access_key': app.config['MINIO_ACCESS_KEY'],
+                           'secret_key': app.config['MINIO_SECRET_KEY'],
+                           'minio_secure': app.config['MINIO_SECURE']})
 cnxpool = mysql.connector.pooling.MySQLConnectionPool(pool_name="online",
                                                           host=app.config['HOST'],
                                                           database=app.config['DB'],

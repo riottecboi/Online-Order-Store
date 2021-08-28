@@ -147,12 +147,12 @@
                 <input type="hidden" name="itemid" value="{{ product['id'] }}"/>
                 <div class="modal-body">
                     <div id="profile" style="display: inline-block;">
-                        {% if product['hasimg'] == True %}
+                        {% if product['profilehasimg'] == True %}
                             <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="150" height="150" style="vertical-align:middle"/>
                         {% else %}
                             <img src="static/default.png" width="150" height="150" alt="default-image" style="vertical-align:middle">
                         {% endif %}
-                        <input type="file" name='editprofileimg' id="editprofileimg" accept="image/*" required>
+                        <input type="file" name='pfimg' id="pfimg" accept="image/*">
                     </div>
                     <hr>
                     <h5>Item's name:</h5>
@@ -170,32 +170,25 @@
                         <input type="number" id="editprice" name="editprice" value="{{ product['price'] }}">
                     </p>
                     <hr>
+                    {% if product['hasimg'] == True %}
                     <h5>Current item's images:</h5>
                     <div id="images" style="display: inline-block;">
-                        <span style="vertical-align:middle">
-                        {% if product['hasimg'] == True %}
-                            <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="100" height="100" style="vertical-align:middle"/>
-                        {% else %}
-                            <img src="static/default.png" width="100" height="100" alt="default-image" style="vertical-align:middle">
-                        {% endif %}
-                        </span>
-                        <span style="vertical-align:middle">
-                        {% if product['hasimg'] == True %}
-                            <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="100" height="100" style="vertical-align:middle"/>
-                        {% else %}
-                            <img src="static/default.png" width="100" height="100" alt="default-image" style="vertical-align:middle">
-                        {% endif %}
-                        </span>
-                        <span style="vertical-align:middle">
-                        {% if product['hasimg'] == True %}
-                            <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="100" height="100" style="vertical-align:middle"/>
-                        {% else %}
-                            <img src="static/default.png" width="100" height="100" alt="default-image" style="vertical-align:middle">
-                        {% endif %}
-                        </span>
+                        {% for img in product['imgs'] %}
+                            <span style="vertical-align:middle">
+                            {% if img['hasimg'] == True %}
+                                <img src="data:{{ img['content_type'] }};base64, {{ img['img'] }}" width="100" height="100" style="vertical-align:middle"/>
+                            {% else %}
+                                <img src="static/default.png" width="100" height="100" alt="default-image" style="vertical-align:middle">
+                            {% endif %}
+                            </span>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <h5>No item's images found</h5>
+                    {% endif %}
+                    <hr>
                     <p>
-                        <input type="file" name='editfiles' id="editfiles" multiple accept="image/*" required>
+                        <input type="file" name='imgs' id="imgs" multiple accept="image/*">
                     </p>
                 </div>
                 <!-- Modal footer -->
@@ -262,7 +255,7 @@
       <div class="overview-boxes">
         {% for product in products %}
           <div class="right-side" style="margin-bottom: 50px">
-              {% if product['hasimg'] == True %}
+              {% if product['profilehasimg'] == True %}
                 <img src="data:{{ product['content_type'] }};base64, {{ product['img'] }}" width="500" height="600"/>
               {% else %}
                 <img src="static/default.png" alt="default-image">

@@ -75,12 +75,27 @@ def from_python_to_js_serialization(pythondict):
     """
     return base64.b64encode(json.dumps(pythondict).encode('utf-8'))
 
+def update_product(id, title, description, price, images):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_update_query = f"update {app.config['ITEMS_TABLE']} set title=%s, description=%s, price=%s, images=%s where id=%s"
+    try:
+        c.execute(mysql_update_query,(title, description, price, images, id))
+        conn.commit()
+        ret = 'Inserted', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
+
 def add_product(title, description, price, images):
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_update_query = f"insert into {app.config['ITEMS_TABLE']} (title, description, price, images) values (%s,%s,%s,%s)"
+    mysql_add_query = f"insert into {app.config['ITEMS_TABLE']} (title, description, price, images) values (%s,%s,%s,%s)"
     try:
-        c.execute(mysql_update_query,(title, description, price, images))
+        c.execute(mysql_add_query,(title, description, price, images))
         conn.commit()
         ret = 'Inserted', 200
     except Exception as e:
@@ -268,28 +283,46 @@ def logout():
 @app.route('/admin_products', methods=['GET', 'POST'])
 def admin_products():
     products = []
+    images = []
     user = request.cookies.get(app.config['ADMIN_USER'])
     items = get_products()
     for product in items:
         if 'images' in product:
-            profileimg = product['images']['profile']['path']
-            bucket_name = product['images']['profile']['bucket_name']
+            if 'profile' in product['images']:
+                profileimg = product['images']['profile']['path']
+                bucket_name = product['images']['profile']['bucket_name']
+                try:
+                    file = download.download_file(profileimg, bucket_name=bucket_name)
+                    product['img'] = base64.b64encode(file['data']).decode('ascii')
+                    product['content_type'] = file['content_type']
+                    product['profilehasimg'] = True
+                except:
+                    product['profilehasimg'] = False
+            else:
+                product['profilehasimg'] = False
+            if 'images' in product['images']:
+                if len(product['images']['images']) != 0:
+                    for p in product['images']['images']:
+                        try:
+                            file = download.download_file(p['path'], p['bucket_name'])
+                            img = base64.b64encode(file['data']).decode('ascii')
+                            content_type = file['content_type']
+                            images.append({'img': img, 'content_type': content_type, 'hasimg': True})
+                        except:
+                            product['hasimg'] = False
+                    product['imgs'] = images
+                    product['hasimg'] = True
+                else:
+                    product['hasimg'] = False
             product.pop('images')
-            try:
-                file = download.download_file(profileimg, bucket_name=bucket_name)
-                product['img'] = base64.b64encode(file['data']).decode('ascii')
-                product['content_type'] = file['content_type']
-                product['hasimg'] = True
-            except:
-                product['hasimg'] = False
         else:
+            product['profilehasimg'] = False
             product['hasimg'] = False
         products.append(product)
     return render_template('admin-products.html', products=products, user=user)
 
 @app.route('/edititem', methods=['POST'])
 def edititem():
-    hasImg = False
     profile = {}
     images = []
     product = get_product_by_id(request.form.get('itemid'))
@@ -298,30 +331,41 @@ def edititem():
     price = product['price']
     if 'images' in product:
         profile_db = product['images']
-        hasImg = True
     if request.method == 'POST':
-        if 'editname' in request.args:
-            name = request.form.get('name')
-        if 'editdescription' in request.args:
+        if 'editname' in request.form:
+            name = request.form.get('editname')
+        if 'editdescription' in request.form:
             description = request.form.get('editdescription')
-        if 'editprice' in request.args:
+        if 'editprice' in request.form:
             price = request.form.get('editprice')
-        if 'editprofileimg' in request.args:
-            profileimg = request.files.get('profileimg')
-            filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
-            profileimg.save(filepath)
-            resp = upload.upload_file(filepath, profileimg.content_type)
-            profile['profile'] = resp
-            os.remove(filepath)
-        if 'editfiles' in request.args:
-            files = request.files.getlist('files')
-            for file in files:
-                filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
-                file.save(filepath)
-                resp = upload.upload_file(filepath, file.content_type)
-                images.append(resp)
+        if 'pfimg' in request.files:
+            try:
+                profileimg = request.files.get('pfimg')
+                filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
+                profileimg.save(filepath)
+                resp = upload.upload_file(filepath, profileimg.content_type)
+                profile['profile'] = resp
                 os.remove(filepath)
-            profile['images'] = images
+            except:
+                profile['profile'] = profile_db['profile']
+        if 'imgs' in request.files:
+            files = request.files.getlist('imgs')
+            try:
+                for file in files:
+                    filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
+                    file.save(filepath)
+                    resp = upload.upload_file(filepath, file.content_type)
+                    images.append(resp)
+                    os.remove(filepath)
+                profile['images'] = images
+            except:
+                profile['images'] = profile_db['images']
+        update = update_product(request.form.get('itemid'),name,description,int(price), str(profile))
+        if update[1] == 200:
+            flash('Updated successful')
+        else:
+            flash('Update item failed')
+    return redirect("admin_products")
 
 @app.route('/additem', methods=['POST'])
 def additem():

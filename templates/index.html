@@ -3,6 +3,7 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="60">
     <title> Admin || Dashboard </title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/style-1.css')}}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/modal.css')}}">
@@ -73,12 +74,6 @@
             <span class="links_name">Order list</span>
           </a>
         </li>
-        <li>
-          <a href="#">
-            <i class='bx bx-cog' ></i>
-            <span class="links_name">Setting</span>
-          </a>
-        </li>
         <li class="log_out">
           <a href="{{url_for('logout')}}">
             <i class='bx bx-log-out'></i>
@@ -94,7 +89,7 @@
         <span class="dashboard">Dashboard</span>
       </div>
       <div class="profile-details">
-        <span class="admin_name"> Welcome back <b> {{user}}</b></span>
+        <span class="admin_name"> Welcome back <b> {{user}}</b></span><i class='bx bx-cog' ></i>
       </div>
     </nav>
     {% for data in datas %}
@@ -242,14 +237,12 @@
               <img src="static/images/product-1-720x480.jpg" alt="">
               <span class="product">marshmallow americano</span>
             </a>
-            <span class="price">VND30000</span>
           </li>
           <li>
             <a href="#">
               <img src="static/images/product-1-720x480.jpg" alt="">
               <span class="product">marshmallow mint</span>
             </a>
-            <span class="price">VND30000</span>
           </li>
           </ul>
         </div>

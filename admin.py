@@ -209,6 +209,20 @@ def get_items():
     conn.close()
     return results
 
+def delete_item(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_delete_query = f"delete from {app.config['ITEMS_TABLE']} where id=%s"
+    try:
+        c.execute(mysql_delete_query, (id,))
+        conn.commit()
+        ret = 'Item deleted', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
 def displayfunction(viewstate):
     orders = []
     current = datetime.now().strftime('%H:%M:%S %d/%m/%Y')
@@ -324,6 +338,14 @@ def admin_products():
             product['hasimg'] = False
         products.append(product)
     return render_template('admin-products.html', products=products, user=user)
+
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    id = request.form.get('itemid')
+    delete = delete_item(id)
+    flash(f"{delete[0]}")
+    return redirect("admin_products")
 
 @app.route('/edititem', methods=['POST'])
 def edititem():

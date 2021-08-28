@@ -2,7 +2,7 @@ from flask_env import MetaFlaskEnv
 import mysql.connector
 from mysql.connector import pooling
 from flask_wtf.csrf import CSRFProtect
-from flask import Flask, render_template, redirect, url_for, make_response, request
+from flask import Flask, render_template, redirect, url_for, make_response, request, flash
 import uuid
 from filedownload import FileDownload
 from fileupload import FileUpload
@@ -159,6 +159,7 @@ def processing():
 
 @app.route("/done")
 def done():
+    flash('We receive your order and contact you soon')
     return render_template("thankyou.html")
 
 @app.route("/contact")

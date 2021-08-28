@@ -5,15 +5,16 @@
     <meta charset="UTF-8">
     <title> Admin || Dashboard </title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/style-1.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/modal.css')}}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src='https://kit.fontawesome.com/a076d05399.js'></script>
-      <!-- Boxicons CDN Link -->
+    <!-- Boxicons CDN Link -->
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
    </head>
   <style>
     .select {
@@ -33,12 +34,25 @@
     border-radius: 5px; }
 </style>
 <body>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="login_mes active">
+            {% if messages|length > 1 %}
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            {% else %}
+                {{ messages[0]}}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% endwith %}
   <div class="sidebar">
     <div class="logo-details">
       <a href="{{url_for('menu')}}">
         <i class='bx bxs-home'></i>
       </a>
-      <span class="logo_name">ControlPanel</span>
+      <span class="logo_name">Techinno</span>
     </div>
       <ul class="nav-links">
         <li>
@@ -284,6 +298,12 @@ function figures() {
         modal.style.display = "none";
       }
     }
+</script>
+<script>
+    $(document).ready(function() {
+        setTimeout(function() {
+            $('.login_mes').fadeOut('slow');
+            }, 3000);})
 </script>
 </body>
 </html>

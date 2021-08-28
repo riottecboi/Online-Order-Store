@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/modal.css')}}">
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" rel="stylesheet">
 
     <title>By APE</title>
@@ -20,7 +21,19 @@
     </head>
     
     <body>
-    
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="login_mes active">
+            {% if messages|length > 1 %}
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            {% else %}
+                {{ messages[0]}}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% endwith %}
     <!-- ***** Preloader Start ***** -->
     <div id="js-preloader" class="js-preloader">
       <div class="preloader-inner">
@@ -69,7 +82,7 @@
                         <br>
                         <br>
                         <h2>THANK <em>YOU</em></h2>
-                        <p>We really appreciate you giving us a moment of your time today. Thanks for being you.</p>
+                        <p>We really appreciate you giving us a moment of your time today. Thanks for supporting us.</p>
                     </div>
                 </div>
             </div>
@@ -200,6 +213,11 @@
     
     <!-- Global Init -->
     <script src="static/js/custom.js"></script>
-
+    <script>
+        $(document).ready(function() {
+        setTimeout(function() {
+            $('.login_mes').fadeOut('slow');
+            }, 3000);})
+    </script>
   </body>
 </html>

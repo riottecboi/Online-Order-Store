@@ -77,12 +77,12 @@ def update_product(products):
     conn.close()
     return identified
 
-def update_order(identified, name, phone, email, address, city, payment, total):
+def update_order(identified, name, phone, email, address, city, payment, total, dayship, timeship):
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, name, phone, email, address, city, payment, total) values (%s,%s,%s,%s,%s,%s,%s,%s)"
+    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, name, phone, email, address, city, payment, total,dayship,timeship) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     try:
-        c.execute(mysql_update_query, (identified, name, phone, email, address, city, payment, total))
+        c.execute(mysql_update_query, (identified, name, phone, email, address, city, payment, total, dayship,timeship))
         conn.commit()
         ret = 'Updated', 200
     except Exception as e:
@@ -151,7 +151,10 @@ def processing():
     city = request.form.get('city')
     type = request.form.get('type')
     total = request.form.get('price')
-    update = update_order(identified,name,phone,email,address,city,type,total)
+    date = request.form.get('dto').split('T')
+    dayship = date[0]
+    timeship = date[1]
+    update = update_order(identified,name,phone,email,address,city,type,total,dayship,timeship)
     if update[1] == 200:
         return redirect(url_for('done'))
     else:

@@ -14,6 +14,7 @@ from filedownload import FileDownload
 from fileupload import FileUpload
 import os
 import ast
+from datetime import datetime
 
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "adminonlineshopsecretkey"
@@ -143,15 +144,15 @@ def get_products():
     return response
 
 
-def get_name_item(itemid):
+def get_name_item(itemid,identified):
     conn = cnxpool.get_connection()
     c = conn.cursor(buffered=True)
-    mysql_select_query = f"select i.title, p.quantity from {app.config['ITEMS_TABLE']} i join {app.config['PRODUCTS_TABLE']} p on " \
-                         f"i.id = p.itemid where p.itemid = %s"
-    c.execute(mysql_select_query, (itemid,))
+    mysql_select_query = f"select i.title, p.quantity, p.price from {app.config['ITEMS_TABLE']} i join {app.config['PRODUCTS_TABLE']} p on " \
+                         f"i.id = p.itemid where p.itemid = %s and p.identified = %s"
+    c.execute(mysql_select_query, (itemid, identified))
     item = c.fetchone()
     if item is not None:
-        ret = {'item': item[0], 'quantity': item[1]}
+        ret = {'item': item[0], 'quantity': item[1], 'price': item[2]}
     else:
         ret = {}
     c.close()
@@ -172,10 +173,10 @@ def get_order_itemid(identified):
     conn.close()
     return ids
 
-def get_orders():
+def get_order_by_identified():
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select identified from {app.config['ORDERS_TABLE']}"
+    mysql_select_query = f"select identified from {app.config['ORDERS_TABLE']} order by time desc"
     c.execute(mysql_select_query)
     orders = c.fetchall()
     if len(orders) != 0:
@@ -190,24 +191,27 @@ def get_items():
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total from " \
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship from " \
                          f"{app.config['ORDERS_TABLE']} where identified = %s"
-    orders = get_orders()
+    orders = get_order_by_identified()
     for order in orders:
         quantity = []
         ids = get_order_itemid(order[0])
         for id in ids:
-            quantity.append(get_name_item(id))
+            quantity.append(get_name_item(id,order[0]))
         c.execute(mysql_select_query, (order[0],))
         resp = c.fetchone()
+        day_raw = resp[9].split('-')
+        day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
         results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
-                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'detail': quantity})
+                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'detail': quantity})
     c.close()
     conn.close()
     return results
 
 def displayfunction(viewstate):
     orders = []
+    current = datetime.now().strftime('%H:%M:%S %d/%m/%Y')
     user = request.cookies.get(app.config['ADMIN_USER'])
     if len(viewstate) == 0:
         try:
@@ -217,7 +221,7 @@ def displayfunction(viewstate):
             pass
     viewstate = from_python_to_js_serialization(viewstate)
     numbResults = len(orders)
-    return render_template('index.html', user=user, viewstate=viewstate, results=numbResults, datas=orders)
+    return render_template('index.html', user=user, viewstate=viewstate, results=numbResults, datas=orders, current=current)
 
 
 def login_function(form):

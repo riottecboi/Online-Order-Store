@@ -33,7 +33,9 @@ CREATE TABLE `orders` (
     `city` varchar(64) COLLATE utf8_unicode_ci NOT NULL,
     `payment` varchar(64) COLLATE utf8_unicode_ci NOT NULL,
     `total` int(10) NOT NULL,
-    `time` timestamp NULL,
+    `time` timestamp NOT NULL default CURRENT_TIMESTAMP,
+    `dayship` varchar(32),
+    `timeship` varchar(8),
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 

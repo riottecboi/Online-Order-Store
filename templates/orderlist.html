@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<!-- Designined by CodingLab | www.youtube.com/codinglabyt -->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <title> Admin || Dashboard </title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/style-1.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/modal.css')}}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <!-- Boxicons CDN Link -->
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   </head>
+  <style>
+    [type="date"] {
+      background:#fff url(https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png)  97% 50% no-repeat ;
+    }
+    [type="date"]::-webkit-inner-spin-button {
+      display: none;
+    }
+    [type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 0;
+    }
+    input {
+      border: 1px solid #c4c4c4;
+      border-radius: 5px;
+      background-color: #fff;
+      padding: 3px 5px;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
+      width: 190px;
+    }
+    input[type=submit] {padding:5px 15px; background:#ccc; border:0 none;
+    cursor:pointer;
+    -webkit-border-radius: 5px;
+    border-radius: 5px; }
+  </style>
+<body>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="login_mes active">
+            {% if messages|length > 1 %}
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            {% else %}
+                {{ messages[0]}}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% endwith %}
+  <div class="sidebar">
+    <div class="logo-details">
+      <a href="{{url_for('menu')}}">
+        <i class='bx bxs-home'></i>
+      </a>
+      <span class="logo_name">Techinno</span>
+    </div>
+      <ul class="nav-links">
+        <li>
+          <a href="{{url_for('menu')}}" >
+            <i class='bx bx-grid-alt' ></i>
+            <span class="links_name">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{url_for('admin_products')}}">
+            <i class='bx bx-box' ></i>
+            <span class="links_name">Product</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="active">
+            <i class='bx bx-list-ul' ></i>
+            <span class="links_name">Order list</span>
+          </a>
+        </li>
+        <li class="log_out">
+          <a href="{{url_for('logout')}}">
+            <i class='bx bx-log-out'></i>
+            <span class="links_name">Log out</span>
+          </a>
+        </li>
+      </ul>
+  </div>
+  <section class="home-section">
+    <nav>
+      <div class="sidebar-button">
+          <i class='bx bx-menu sidebarBtn'></i>
+          <span class="dashboard">Order list</span>
+      </div>
+      <div class="search-box" >
+        <input type="text" placeholder="Search...">
+        <button type="submit" style="position: absolute; top: 24px"><i class='bx bx-search'></i></button>
+      </div>
+      <div class="profile-details">
+        <span class="admin_name"> Welcome back <b> {{user}}</b></span><i class='bx bx-cog' ></i>
+      </div>
+    </nav>
+      <div class="home-content">
+          <div class="overview-boxes">
+            <div class="box">
+              <div class="right-side">
+                <div class="select">
+                    <input type="date" name="date" id="date">
+                </div>
+                  <br>
+                <button type="submit" class="btn btn-primary">Get items</button>
+              </div>
+            </div>
+          </div>
+          <div class="table_content" style="border-radius: 12px;margin: 0 20px;box-shadow: 0 5px 10px rgb(0 0 0 / 10%);margin-top: 20px">
+              <table>
+                    <thead>
+                        <tr>
+                            <th>Time ordered</th>
+                            <th>Name</th>
+                            <th>Email</th>
+							<th>Phone</th>
+							<th>Address</th>
+							<th>City</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in datas %}
+                        <tr>
+                            <td>{{ data['timeorder'] }}</td>
+                            <td>{{ data['name'] }}</td>
+                            <td>{{ data['email'] }}</td>
+                            <td>{{ data['phone'] }}</td>
+                            <td>{{ data['address'] }}</td>
+                            <td>{{ data['city'] }}</td>
+                            <td>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}">details</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+          </div>
+
+      </div>
+    </div>
+
+  </section>
+  <script>
+    let sidebar = document.querySelector(".sidebar");
+    let sidebarBtn = document.querySelector(".sidebarBtn");
+    sidebarBtn.onclick = function() {
+    sidebar.classList.toggle("active");
+    if(sidebar.classList.contains("active")){
+      sidebarBtn.classList.replace("bx-menu" ,"bx-menu-alt-right");
+    }else
+      sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+    }
+ </script>
+<script>
+  /* When the user clicks on the button,
+toggle between hiding and showing the dropdown content */
+function kinds() {
+  document.getElementById("kinds").classList.toggle("show");
+}
+function figures() {
+  document.getElementById("figure").classList.toggle("show");
+}
+
+</script>
+<script>
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("options");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+</script>
+<script>
+    $(document).ready(function() {
+        setTimeout(function() {
+            $('.login_mes').fadeOut('slow');
+            }, 3000);})
+</script>
+</body>
+</html>

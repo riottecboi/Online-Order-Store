@@ -187,23 +187,24 @@ def get_order_by_identified():
     conn.close()
     return ret
 
-def get_items():
+def get_items(date):
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
     mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship from " \
-                         f"{app.config['ORDERS_TABLE']} where identified = %s"
+                         f"{app.config['ORDERS_TABLE']} where identified = %s and date(time) = %s"
     orders = get_order_by_identified()
     for order in orders:
         quantity = []
         ids = get_order_itemid(order[0])
         for id in ids:
             quantity.append(get_name_item(id,order[0]))
-        c.execute(mysql_select_query, (order[0],))
+        c.execute(mysql_select_query, (order[0], date))
         resp = c.fetchone()
-        day_raw = resp[9].split('-')
-        day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
-        results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
+        if resp is not None:
+            day_raw = resp[9].split('-')
+            day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
+            results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
                         'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'detail': quantity})
     c.close()
     conn.close()
@@ -229,7 +230,8 @@ def displayfunction(viewstate):
     user = request.cookies.get(app.config['ADMIN_USER'])
     if len(viewstate) == 0:
         try:
-            orders = get_items()
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            orders = get_items(current_date)
         except Exception as e:
             flash('Error: {}'.format(str(e)))
             pass
@@ -297,6 +299,34 @@ def logout():
     resp = make_response(render_template('login.html', form=LoginForm(), message="Session Expired"))
     resp.set_cookie(key=app.config['ADMIN_USER'], max_age=0)
     return resp
+
+@app.route('/orderlist', methods=['GET', 'POST'])
+def orderlist():
+    orders = []
+    sales = 0
+    user = request.cookies.get(app.config['ADMIN_USER'])
+    if request.method == 'POST':
+        datepicker = request.form.get('date').split('T')
+        date = datepicker[0]
+        try:
+            orders = get_items(date)
+            for order in orders:
+                sales += int(order['total'])
+        except Exception as e:
+            flash('Error: {}'.format(str(e)))
+            pass
+    else:
+        try:
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            orders = get_items(current_date)
+            for order in orders:
+                sales += int(order['total'])
+        except Exception as e:
+            flash('Error: {}'.format(str(e)))
+            pass
+    if len(orders) == 0:
+        flash('No order found')
+    return render_template('orderlist.html', user=user, datas=orders, sales=sales)
 
 @app.route('/admin_products', methods=['GET', 'POST'])
 def admin_products():

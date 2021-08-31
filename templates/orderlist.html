@@ -104,11 +104,26 @@
           <div class="overview-boxes">
             <div class="box">
               <div class="right-side">
-                <div class="select">
-                    <input type="date" name="date" id="date">
-                </div>
-                  <br>
-                <button type="submit" class="btn btn-primary">Get items</button>
+                <form id="filter" action="/orderlist" method="post" enctype = "multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="select">
+                        <input type="date" name="date" id="date">
+                    </div>
+                      <br>
+                    <button type="submit" class="btn btn-primary">Get items</button>
+                </form>
+              </div>
+            </div>
+            <div class="box">
+              <div class="right-side">
+                <div class="box-topic">Total Order</div>
+                <div class="number">{{datas|length}}</div>
+              </div>
+            </div>
+            <div class="box">
+              <div class="right-side">
+                <div class="box-topic">Total Sales</div>
+                <div class="number">{{sales}}</div>
               </div>
             </div>
           </div>
@@ -125,6 +140,7 @@
                             <th>Details</th>
                         </tr>
                     </thead>
+                    {% if datas|length > 0 %}
                     <tbody>
                         {% for data in datas %}
                         <tr>
@@ -140,6 +156,7 @@
                         </tr>
                         {% endfor %}
                     </tbody>
+                    {% endif %}
                 </table>
           </div>
 

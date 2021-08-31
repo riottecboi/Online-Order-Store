@@ -133,10 +133,9 @@ def detail():
                 content_type = file['content_type']
                 images.append({'img': img, 'content_type': content_type, 'hasimg': True})
             except:
-                p['hasimg'] = False
+                images.append({'hasimg': False})
         item[0].pop('images')
         item[0]['imgs'] = images
-        item[0]['hasimg'] = True
         if item[1] == 200:
             datas.append(item[0])
     return render_template('product-details.html', items=datas)

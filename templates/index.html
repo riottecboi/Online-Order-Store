@@ -29,7 +29,15 @@
 .select:hover::after {
   color: #f39c12;
 }
-    input[type=submit] {padding:5px 15px; background:#ccc; border:0 none;
+     .in {
+      border: 1px solid #c4c4c4;
+      border-radius: 5px;
+      background-color: #fff;
+      padding: 3px 5px;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
+      width: 190px;
+      }
+      input[type=submit] {padding:5px 15px; background:#ccc; border:0 none;
     cursor:pointer;
     -webkit-border-radius: 5px;
     border-radius: 5px; }
@@ -90,14 +98,15 @@
               <input type="hidden" name="viewstate" value="{{ viewstate }}">
             <div class="modal-body">
                 <h5>Change email</h5>
-                <p><input type="text" name="newmail" id="newmail"> </p>
+                <p><input type="text" name="newmail" id="newmail" class="in"> </p>
                 <hr>
                 <h5>Change phone</h5>
-                <p><input type="text" name="newphone" id="newphone"> </p>
+                <p><input type="text" name="newphone" id="newphone" class="in"> </p>
 
             </div>
               <!-- Modal footer -->
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#profile" data-dismiss="modal" >Back</button>
                 <button type="submit" class="btn btn-primary" >Save changes</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
@@ -124,14 +133,15 @@
             <div class="modal-body">
                 <h5>Current Password</h5>
                 <p><input type="password" id="curinputpass"
-                          name="curpass" placeholder="Current Password" required></p>
+                          name="curpass" placeholder="Current Password" class="in" required></p>
                 <hr>
                 <h5>New Password</h5>
                 <p><input type="password" id="newinputpass"
-                          name="newpass" placeholder="New Password" required> <input type="checkbox" onclick="maskFunction()"></p>
+                          name="newpass" placeholder="New Password" class="in" required> <input type="checkbox" onclick="maskFunction()"></p>
             </div>
               <!-- Modal footer -->
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#profile" data-dismiss="modal" >Back</button>
                 <button type="submit" class="btn btn-primary" >Save changes</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>

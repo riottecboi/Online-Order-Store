@@ -2,7 +2,8 @@ from flask_env import MetaFlaskEnv
 import mysql.connector
 from mysql.connector import pooling
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from flask import Flask, render_template, redirect, url_for, make_response, request, flash
+from datetime import timedelta
+from flask import Flask, render_template, redirect, url_for, make_response, request, flash, session
 import uuid
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
@@ -25,21 +26,22 @@ class Configuration(metaclass=MetaFlaskEnv):
     HOST = "127.0.0.1"
     DB = "online-shop"
     USERS = "admin"
-    PASSWORD = "thisisasecretkey"
+    PASSWORD = "xxxx"
     PORT = 3306
     ITEMS_TABLE = "items"
     ORDERS_TABLE = "orders"
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
     USERS_TABLE = "users"
-    MINIO_API_URL = "34.71.225.137:9000"
-    MINIO_ACCESS_KEY = "socratesaccesskey"
-    MINIO_SECRET_KEY = "socratessecretkey2020"
+    MINIO_API_URL = "xxxx:9000"
+    MINIO_ACCESS_KEY = "xxx"
+    MINIO_SECRET_KEY = "xxx"
     MINIO_SECURE = False
-    MINIO_BUCKET_NAME = "testlifecycle"
+    MINIO_BUCKET_NAME = "byape"
     UPLOAD_PATH = '/tmp'
 
 app = Flask(__name__)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 csrf = CSRFProtect(app)
 
 @app.errorhandler(CSRFError)
@@ -187,24 +189,25 @@ def get_order_by_identified():
     conn.close()
     return ret
 
-def get_items():
+def get_items(date):
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship from " \
-                         f"{app.config['ORDERS_TABLE']} where identified = %s"
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode from " \
+                         f"{app.config['ORDERS_TABLE']} where identified = %s and date(time) = %s"
     orders = get_order_by_identified()
     for order in orders:
         quantity = []
         ids = get_order_itemid(order[0])
         for id in ids:
             quantity.append(get_name_item(id,order[0]))
-        c.execute(mysql_select_query, (order[0],))
+        c.execute(mysql_select_query, (order[0], date))
         resp = c.fetchone()
-        day_raw = resp[9].split('-')
-        day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
-        results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
-                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'detail': quantity})
+        if resp is not None:
+            day_raw = resp[9].split('-')
+            day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
+            results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
+                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'code': resp[11], 'detail': quantity})
     c.close()
     conn.close()
     return results
@@ -226,10 +229,11 @@ def delete_item(id):
 def displayfunction(viewstate):
     orders = []
     current = datetime.now().strftime('%H:%M:%S %d/%m/%Y')
-    user = request.cookies.get(app.config['ADMIN_USER'])
+    user = session.get('user')
     if len(viewstate) == 0:
         try:
-            orders = get_items()
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            orders = get_items(current_date)
         except Exception as e:
             flash('Error: {}'.format(str(e)))
             pass
@@ -252,6 +256,8 @@ def login_function(form):
             if ph.verify(record[0], user_pass) is True:
                 ret = {'apikey': record[1], 'user': record[2], 'message':'authsuccess'}
                 code = 200
+                session["if_logged"] = True
+                session['user'] = record[2]
         except (argon2.exceptions.VerifyMismatchError, argon2.exceptions.VerificationError):
             ret = {'message': 'Login incorrect'}
             code = 401
@@ -269,10 +275,15 @@ def root():
 
 @app.route('/menu', methods=['GET', 'POST'])
 def menu():
-    return displayfunction(viewstate={})
+    if session.get('if_logged') is not None:
+        return displayfunction(viewstate={})
+    else:
+        flash('You need to login first')
+        return redirect('/login', code=302)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    session.permanent = True
     form = LoginForm()
     if form.validate_on_submit():
         # Make openapi login query with username and password
@@ -280,8 +291,7 @@ def login():
             login_systems = login_function(form)
             if login_systems[1] == 200:
                 # If response is code 200 --> get apikey and set cookie
-                resp = make_response(redirect("menu"))
-                resp.set_cookie(key=app.config['ADMIN_USER'], value=login_systems[0]['user'], max_age=300, path='/')
+                resp = make_response(redirect("/menu"))
             else: 
                 # If response is code 401 --> redirect to error login page
                 flash(f"{login_systems[0]['message']}")
@@ -295,132 +305,179 @@ def login():
 @app.route('/logout')
 def logout():
     resp = make_response(render_template('login.html', form=LoginForm(), message="Session Expired"))
-    resp.set_cookie(key=app.config['ADMIN_USER'], max_age=0)
+    session.clear()
     return resp
+
+@app.route('/orderlist', methods=['GET', 'POST'])
+def orderlist():
+    if session.get('if_logged') is not None:
+        orders = []
+        sales = 0
+        user = session.get('user')
+        if request.method == 'POST':
+            datepicker = request.form.get('date').split('T')
+            date = datepicker[0]
+            try:
+                orders = get_items(date)
+                for order in orders:
+                    sales += int(order['total'])
+            except Exception as e:
+                flash('Error: {}'.format(str(e)))
+                pass
+        else:
+            try:
+                current_date = datetime.now().strftime('%Y-%m-%d')
+                orders = get_items(current_date)
+                for order in orders:
+                    sales += int(order['total'])
+            except Exception as e:
+                flash('Error: {}'.format(str(e)))
+                pass
+        if len(orders) == 0:
+            flash('No order found')
+        return render_template('orderlist.html', user=user, datas=orders, sales=sales)
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
 
 @app.route('/admin_products', methods=['GET', 'POST'])
 def admin_products():
-    products = []
-    user = request.cookies.get(app.config['ADMIN_USER'])
-    items = get_products()
-    for product in items:
-        images = []
-        if 'images' in product:
-            if 'profile' in product['images']:
-                profileimg = product['images']['profile']['path']
-                bucket_name = product['images']['profile']['bucket_name']
-                try:
-                    file = download.download_file(profileimg, bucket_name=bucket_name)
-                    product['img'] = base64.b64encode(file['data']).decode('ascii')
-                    product['content_type'] = file['content_type']
-                    product['profilehasimg'] = True
-                except:
+    if session.get('if_logged') is not None:
+        products = []
+        user = session.get('user')
+        items = get_products()
+        for product in items:
+            images = []
+            if 'images' in product:
+                if 'profile' in product['images']:
+                    profileimg = product['images']['profile']['path']
+                    bucket_name = product['images']['profile']['bucket_name']
+                    try:
+                        file = download.download_file(profileimg, bucket_name=bucket_name)
+                        product['img'] = base64.b64encode(file['data']).decode('ascii')
+                        product['content_type'] = file['content_type']
+                        product['profilehasimg'] = True
+                    except:
+                        product['profilehasimg'] = False
+                else:
                     product['profilehasimg'] = False
+                if 'images' in product['images']:
+                    if len(product['images']['images']) != 0:
+                        for p in product['images']['images']:
+                            try:
+                                file = download.download_file(p['path'], p['bucket_name'])
+                                img = base64.b64encode(file['data']).decode('ascii')
+                                content_type = file['content_type']
+                                images.append({'img': img, 'content_type': content_type, 'hasimg': True})
+                            except:
+                                product['hasimg'] = False
+                        product['imgs'] = images
+                        product['hasimg'] = True
+                    else:
+                        product['hasimg'] = False
+                product.pop('images')
             else:
                 product['profilehasimg'] = False
-            if 'images' in product['images']:
-                if len(product['images']['images']) != 0:
-                    for p in product['images']['images']:
-                        try:
-                            file = download.download_file(p['path'], p['bucket_name'])
-                            img = base64.b64encode(file['data']).decode('ascii')
-                            content_type = file['content_type']
-                            images.append({'img': img, 'content_type': content_type, 'hasimg': True})
-                        except:
-                            product['hasimg'] = False
-                    product['imgs'] = images
-                    product['hasimg'] = True
-                else:
-                    product['hasimg'] = False
-            product.pop('images')
-        else:
-            product['profilehasimg'] = False
-            product['hasimg'] = False
-        products.append(product)
-    return render_template('admin-products.html', products=products, user=user)
-
+                product['hasimg'] = False
+            products.append(product)
+        return render_template('admin-products.html', products=products, user=user)
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
 
 @app.route('/delete', methods=['POST'])
 def delete():
-    id = request.form.get('itemid')
-    delete = delete_item(id)
-    flash(f"{delete[0]}")
-    return redirect("admin_products")
+    if session.get('if_logged') is not None:
+        id = request.form.get('itemid')
+        delete = delete_item(id)
+        flash(f"{delete[0]}")
+        return redirect("admin_products")
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
 
 @app.route('/edititem', methods=['POST'])
 def edititem():
-    profile = {}
-    images = []
-    product = get_product_by_id(request.form.get('itemid'))
-    name = product['title']
-    description = product['description']
-    price = product['price']
-    if 'images' in product:
-        profile_db = product['images']
-    if request.method == 'POST':
-        if 'editname' in request.form:
-            name = request.form.get('editname')
-        if 'editdescription' in request.form:
-            description = request.form.get('editdescription')
-        if 'editprice' in request.form:
-            price = request.form.get('editprice')
-        if 'pfimg' in request.files:
-            try:
-                profileimg = request.files.get('pfimg')
-                filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
-                profileimg.save(filepath)
-                resp = upload.upload_file(filepath, profileimg.content_type)
-                profile['profile'] = resp
-                os.remove(filepath)
-            except:
-                profile['profile'] = profile_db['profile']
-        if 'imgs' in request.files:
-            files = request.files.getlist('imgs')
-            try:
-                for file in files:
-                    filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
-                    file.save(filepath)
-                    resp = upload.upload_file(filepath, file.content_type)
-                    images.append(resp)
+    if session.get('if_logged') is not None:
+        profile = {}
+        images = []
+        product = get_product_by_id(request.form.get('itemid'))
+        name = product['title']
+        description = product['description']
+        price = product['price']
+        if 'images' in product:
+            profile_db = product['images']
+        if request.method == 'POST':
+            if 'editname' in request.form:
+                name = request.form.get('editname')
+            if 'editdescription' in request.form:
+                description = request.form.get('editdescription')
+            if 'editprice' in request.form:
+                price = request.form.get('editprice')
+            if 'pfimg' in request.files:
+                try:
+                    profileimg = request.files.get('pfimg')
+                    filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
+                    profileimg.save(filepath)
+                    resp = upload.upload_file(filepath, profileimg.content_type)
+                    profile['profile'] = resp
                     os.remove(filepath)
-                profile['images'] = images
-            except:
-                profile['images'] = profile_db['images']
-        update = update_product(request.form.get('itemid'),name,description,int(price), str(profile))
-        if update[1] == 200:
-            flash('Updated successful')
-        else:
-            flash('Update item failed')
-    return redirect("admin_products")
+                except:
+                    profile['profile'] = profile_db['profile']
+            if 'imgs' in request.files:
+                files = request.files.getlist('imgs')
+                try:
+                    for file in files:
+                        filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
+                        file.save(filepath)
+                        resp = upload.upload_file(filepath, file.content_type)
+                        images.append(resp)
+                        os.remove(filepath)
+                    profile['images'] = images
+                except:
+                    profile['images'] = profile_db['images']
+            update = update_product(request.form.get('itemid'),name,description,int(price), str(profile))
+            if update[1] == 200:
+                flash('Updated successful')
+            else:
+                flash('Update item failed')
+        return redirect("admin_products")
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
 
 @app.route('/additem', methods=['POST'])
 def additem():
-    profile = {}
-    images = []
-    if request.method == 'POST':
-        name = request.form.get('name')
-        description = request.form.get('description')
-        price = request.form.get('price')
-        profileimg = request.files.get('profileimg')
-        filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
-        profileimg.save(filepath)
-        resp = upload.upload_file(filepath, profileimg.content_type)
-        profile['profile'] = resp
-        os.remove(filepath)
-        files = request.files.getlist('files')
-        for file in files:
-            filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
-            file.save(filepath)
-            resp = upload.upload_file(filepath, file.content_type)
-            images.append(resp)
+    if session.get('if_logged') is not None:
+        profile = {}
+        images = []
+        if request.method == 'POST':
+            name = request.form.get('name')
+            description = request.form.get('description')
+            price = request.form.get('price')
+            profileimg = request.files.get('profileimg')
+            filepath = os.path.join(app.config['UPLOAD_PATH'], profileimg.filename)
+            profileimg.save(filepath)
+            resp = upload.upload_file(filepath, profileimg.content_type)
+            profile['profile'] = resp
             os.remove(filepath)
-        profile['images'] = images
-        add = add_product(name,description,int(price),str(profile))
-        if add[1] == 200:
-            flash('Added successful')
-        else:
-            flash('Add item failed')
-    return redirect("admin_products")
+            files = request.files.getlist('files')
+            for file in files:
+                filepath = os.path.join(app.config['UPLOAD_PATH'], file.filename)
+                file.save(filepath)
+                resp = upload.upload_file(filepath, file.content_type)
+                images.append(resp)
+                os.remove(filepath)
+            profile['images'] = images
+            add = add_product(name,description,int(price),str(profile))
+            if add[1] == 200:
+                flash('Added successful')
+            else:
+                flash('Add item failed')
+        return redirect("admin_products")
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
 try:
     app.config.from_pyfile('settings.cfg')
 except FileNotFoundError:

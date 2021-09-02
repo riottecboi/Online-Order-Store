@@ -2,35 +2,40 @@ from flask_env import MetaFlaskEnv
 import mysql.connector
 from mysql.connector import pooling
 from flask_wtf.csrf import CSRFProtect
-from flask import Flask, render_template, redirect, url_for, make_response, request, flash
+from flask import Flask, render_template, redirect, url_for, session, request, flash
 import uuid
 from filedownload import FileDownload
 from fileupload import FileUpload
 import base64
 import ast
+import random
+import string
+from datetime import timedelta
+
 class Configuration(metaclass=MetaFlaskEnv):
-    SECRET_KEY = "onlineshopsecretkey"
-    WTF_CSRF_SECRET_KEY = "onlineshopsecretkey"
+    SECRET_KEY = "xxx"
+    WTF_CSRF_SECRET_KEY = "xxxx"
     WTF_CSRF_TIME_LIMIT = 604800
     COOKIE = "ONLINE-SHOP-KEY"
     HOST = "127.0.0.1"
     DB = "online-shop"
     USERS = "admin"
-    PASSWORD = "thisisasecretkey"
+    PASSWORD = "xxxx"
     PORT = 3306
     ITEMS_TABLE = "items"
     ORDERS_TABLE = "orders"
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
-    MINIO_API_URL = "34.71.225.137:9000"
-    MINIO_ACCESS_KEY = "socratesaccesskey"
-    MINIO_SECRET_KEY = "socratessecretkey2020"
+    MINIO_API_URL = "xxx:9000"
+    MINIO_ACCESS_KEY = "xxxx"
+    MINIO_SECRET_KEY = "xxxx"
     MINIO_SECURE = False
-    MINIO_BUCKET_NAME = "testlifecycle"
+    MINIO_BUCKET_NAME = "xxx"
+
 
 app = Flask(__name__)
 csrf = CSRFProtect(app)
-
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 def list():
     lists = []
     conn = cnxpool.get_connection()
@@ -77,12 +82,12 @@ def update_product(products):
     conn.close()
     return identified
 
-def update_order(identified, name, phone, email, address, city, payment, total, dayship, timeship):
+def update_order(identified, code, name, phone, email, address, city, payment, total, dayship, timeship):
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, name, phone, email, address, city, payment, total,dayship,timeship) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, ordercode, name, phone, email, address, city, payment, total,dayship,timeship) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     try:
-        c.execute(mysql_update_query, (identified, name, phone, email, address, city, payment, total, dayship,timeship))
+        c.execute(mysql_update_query, (identified, code, name, phone, email, address, city, payment, total, dayship,timeship))
         conn.commit()
         ret = 'Updated', 200
     except Exception as e:
@@ -93,6 +98,7 @@ def update_order(identified, name, phone, email, address, city, payment, total, 
 
 @app.route('/')
 def index():
+    session.permanent = True
     return redirect(url_for('products'))
 
 @app.route('/products', methods=['GET','POST'])
@@ -133,37 +139,43 @@ def detail():
                 content_type = file['content_type']
                 images.append({'img': img, 'content_type': content_type, 'hasimg': True})
             except:
-                p['hasimg'] = False
+                images.append({'hasimg': False})
         item[0].pop('images')
         item[0]['imgs'] = images
-        item[0]['hasimg'] = True
         if item[1] == 200:
             datas.append(item[0])
+    session['checkout'] = True
     return render_template('product-details.html', items=datas)
 
 @app.route('/processing', methods=['GET','POST'])
 def processing():
-    identified = request.form.get('identified')
-    name = request.form.get('name')
-    phone = request.form.get('phone')
-    email = request.form.get('email')
-    address = request.form.get('address')
-    city = request.form.get('city')
-    type = request.form.get('type')
-    total = request.form.get('price')
-    date = request.form.get('dto').split('T')
-    dayship = date[0]
-    timeship = date[1]
-    update = update_order(identified,name,phone,email,address,city,type,total,dayship,timeship)
-    if update[1] == 200:
-        return redirect(url_for('done'))
+    if session.get('checkout') is not None:
+        identified = request.form.get('identified')
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        address = request.form.get('address')
+        city = request.form.get('city')
+        type = request.form.get('type')
+        total = request.form.get('price')
+        date = request.form.get('dto').split('T')
+        dayship = date[0]
+        timeship = date[1]
+        code = f"{''.join(random.choice(string.ascii_lowercase) for i in range(8))}"
+        update = update_order(identified,code.upper(),name,phone,email,address,city,type,total,dayship,timeship)
+        if update[1] == 200:
+            return redirect(url_for('done', code=code.upper()))
+        else:
+            return redirect(url_for('products'))
     else:
         return redirect(url_for('products'))
 
-@app.route("/done")
+@app.route("/done", methods=['GET'])
 def done():
+    code = request.args.get('code')
     flash('We receive your order and contact you soon')
-    return render_template("thankyou.html")
+    session.clear()
+    return render_template("thankyou.html", code=code)
 
 @app.route("/contact")
 def contact():
@@ -176,18 +188,20 @@ def check():
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
-    final_price = 0
-    products = []
-    quantity = request.form.getlist('quantity')
-    item_id = request.form.getlist('item')
-    price = request.form.getlist('price')
-    for i, q, p in zip(item_id, quantity, price):
-        price = int(q)*int(p)
-        final_price = final_price + price
-        products.append({'id': i, 'quantity': q, 'price':p})
-    identified = update_product(products)
-    return render_template('checkout.html', final_price=final_price, identified=identified)
-
+    if session.get('checkout') is not None:
+        final_price = 0
+        products = []
+        quantity = request.form.getlist('quantity')
+        item_id = request.form.getlist('item')
+        price = request.form.getlist('price')
+        for i, q, p in zip(item_id, quantity, price):
+            price = int(q)*int(p)
+            final_price = final_price + price
+            products.append({'id': i, 'quantity': q, 'price':p})
+        identified = update_product(products)
+        return render_template('checkout.html', final_price=final_price, identified=identified)
+    else:
+        return redirect(url_for('products'))
 try:
     app.config.from_pyfile('settings.cfg')
 except FileNotFoundError:

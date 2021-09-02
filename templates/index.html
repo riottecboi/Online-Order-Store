@@ -88,6 +88,12 @@
         <i class='bx bx-menu sidebarBtn'></i>
         <span class="dashboard">Dashboard</span>
       </div>
+      <div class="search-box" >
+        <form id="search" action="/search" method="post" enctype = "multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="text" name="keyword" placeholder="Search...">
+        </form>
+      </div>
       <div class="profile-details">
         <span class="admin_name"> Welcome back <b> {{user}}</b></span><i class='bx bx-cog' ></i>
       </div>

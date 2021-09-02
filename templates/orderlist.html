@@ -101,8 +101,9 @@
                   <h6>Customer: {{ data['name'] }}</h6>
                   <h6>Address: {{data['address']}}</h6>
                   <h6>City: {{data['city']}}</h6>
-                  <h6>Delivery time: </h6>
-                  <p>{{ data['timeship'] }} - {{ data['dayship'] }}</p>
+                  <h6>Delivery time: {{ data['timeship'] }} - {{ data['dayship'] }}</h6>
+                  <h6>Note: </h6>
+                  <p>{{data['note']}}</p>
                   <h4>Total: <b>{{ data['total'] }} VND ({{ data['payment'] }})</b></h4>
 
               </div>

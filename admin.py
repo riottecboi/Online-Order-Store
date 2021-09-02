@@ -193,7 +193,7 @@ def get_items(date):
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode from " \
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode, note from " \
                          f"{app.config['ORDERS_TABLE']} where identified = %s and date(time) = %s"
     orders = get_order_by_identified()
     for order in orders:
@@ -207,7 +207,7 @@ def get_items(date):
             day_raw = resp[9].split('-')
             day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
             results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
-                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'code': resp[11], 'detail': quantity})
+                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'code': resp[11], 'note': resp[12], 'detail': quantity})
     c.close()
     conn.close()
     return results

@@ -82,12 +82,12 @@ def update_product(products):
     conn.close()
     return identified
 
-def update_order(identified, code, name, phone, email, address, city, payment, total, dayship, timeship):
+def update_order(identified, code, name, phone, email, address, city, payment, total, dayship, timeship,note):
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, ordercode, name, phone, email, address, city, payment, total,dayship,timeship) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, ordercode, name, phone, email, address, city, payment, total,dayship,timeship,note) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     try:
-        c.execute(mysql_update_query, (identified, code, name, phone, email, address, city, payment, total, dayship,timeship))
+        c.execute(mysql_update_query, (identified, code, name, phone, email, address, city, payment, total, dayship,timeship,note))
         conn.commit()
         ret = 'Updated', 200
     except Exception as e:
@@ -157,12 +157,13 @@ def processing():
         address = request.form.get('address')
         city = request.form.get('city')
         type = request.form.get('type')
+        note = request.form.get('message')
         total = request.form.get('price')
         date = request.form.get('dto').split('T')
         dayship = date[0]
         timeship = date[1]
         code = f"{''.join(random.choice(string.ascii_lowercase) for i in range(8))}"
-        update = update_order(identified,code.upper(),name,phone,email,address,city,type,total,dayship,timeship)
+        update = update_order(identified,code.upper(),name,phone,email,address,city,type,total,dayship,timeship,note)
         if update[1] == 200:
             return redirect(url_for('done', code=code.upper()))
         else:

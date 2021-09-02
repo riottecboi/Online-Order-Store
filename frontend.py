@@ -12,24 +12,24 @@ import random
 import string
 
 class Configuration(metaclass=MetaFlaskEnv):
-    SECRET_KEY = "onlineshopsecretkey"
-    WTF_CSRF_SECRET_KEY = "onlineshopsecretkey"
+    SECRET_KEY = "xxx"
+    WTF_CSRF_SECRET_KEY = "xxxx"
     WTF_CSRF_TIME_LIMIT = 604800
     COOKIE = "ONLINE-SHOP-KEY"
     HOST = "127.0.0.1"
     DB = "online-shop"
     USERS = "admin"
-    PASSWORD = "thisisasecretkey"
+    PASSWORD = "xxxx"
     PORT = 3306
     ITEMS_TABLE = "items"
     ORDERS_TABLE = "orders"
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
-    MINIO_API_URL = "34.71.225.137:9000"
-    MINIO_ACCESS_KEY = "socratesaccesskey"
-    MINIO_SECRET_KEY = "socratessecretkey2020"
+    MINIO_API_URL = "xxx:9000"
+    MINIO_ACCESS_KEY = "xxxx"
+    MINIO_SECRET_KEY = "xxxx"
     MINIO_SECURE = False
-    MINIO_BUCKET_NAME = "testlifecycle"
+    MINIO_BUCKET_NAME = "xxx"
 
 app = Flask(__name__)
 csrf = CSRFProtect(app)

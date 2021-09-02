@@ -16,6 +16,7 @@ from fileupload import FileUpload
 import os
 import ast
 from datetime import datetime
+from argon2 import PasswordHasher
 
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "adminonlineshopsecretkey"
@@ -231,6 +232,8 @@ def displayfunction(viewstate):
     orders = []
     current = datetime.now().strftime('%H:%M:%S %d/%m/%Y')
     user = session.get('user')
+    email = session.get('email')
+    telephone = session.get('telephone')
     if len(viewstate) == 0:
         try:
             current_date = datetime.now().strftime('%Y-%m-%d')
@@ -240,7 +243,7 @@ def displayfunction(viewstate):
             pass
     viewstate = from_python_to_js_serialization(viewstate)
     numbResults = len(orders)
-    return render_template('index.html', user=user, viewstate=viewstate, results=numbResults, datas=orders, current=current)
+    return render_template('index.html', user=user, viewstate=viewstate, results=numbResults, datas=orders, current=current, email=email, telephone=telephone)
 
 
 def login_function(form):
@@ -249,16 +252,18 @@ def login_function(form):
     ph = argon2.PasswordHasher()
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select password, apikey, username from {Configuration.USERS_TABLE} where username = %s LIMIT 1"
+    mysql_select_query = f"select password, username, email, telephone from {Configuration.USERS_TABLE} where username = %s LIMIT 1"
     c.execute(mysql_select_query, (user_name,))
     record = c.fetchone()
     if record is not None:
         try:
             if ph.verify(record[0], user_pass) is True:
-                ret = {'apikey': record[1], 'user': record[2], 'message':'authsuccess'}
+                ret = {'user': record[1], 'email':record[2], 'telephone':record[3], 'message':'authsuccess'}
                 code = 200
                 session["if_logged"] = True
-                session['user'] = record[2]
+                session['user'] = record[1]
+                session['email'] = record[2]
+                session['telephone'] = record[3]
         except (argon2.exceptions.VerifyMismatchError, argon2.exceptions.VerificationError):
             ret = {'message': 'Login incorrect'}
             code = 401
@@ -327,6 +332,45 @@ def check_undone_function(id):
     conn.close()
     return ret
 
+def profilechange(email,telephone,user):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_update_query = f"update {app.config['USERS_TABLE']} set email=%s,telephone=%s where username=%s"
+    try:
+        c.execute(mysql_update_query, (email,telephone,user))
+        conn.commit()
+        ret = 'Updated', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
+def passchange(user, curpass, newpass):
+    current_user = user
+    current_pass = curpass
+    newpass = newpass
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    ph = PasswordHasher()
+    mysql_select_query = f"select username, password, enable from {Configuration.USERS_TABLE} where username = %s LIMIT 1"
+    c.execute(mysql_select_query, (current_user,))
+    record = c.fetchone()
+    try:
+        if ph.verify(record[1], current_pass) is True:
+            mysql_update_query = f"update {Configuration.USERS_TABLE} set password = %s where username = %s"
+            mysql_update_tuple = (ph.hash(newpass), current_user)
+            c.execute(mysql_update_query, mysql_update_tuple)
+            conn.commit()
+            ret = {'username': current_user}
+            code = 200
+    except (argon2.exceptions.VerifyMismatchError, argon2.exceptions.VerificationError) as e:
+        ret = {'message': f"Password change failed because {str(e)}"}
+        code = 404
+    c.close()
+    conn.close()
+    return ret, code
+
 @app.route('/')
 def root():
     resp = redirect(url_for('login'))
@@ -381,6 +425,34 @@ def uncheck():
     id = request.form.get('id')
     try:
         check_undone_function(id)
+    except Exception as e:
+        flash(str(e))
+    return redirect('/menu')
+
+@app.route('/changeprofile', methods=['POST'])
+def changemailform():
+    email = request.form.get('newmail')
+    phone = request.form.get('newphone')
+    user = session['user']
+    try:
+        change = profilechange(email,phone,user)
+        if change[1] == 200:
+            flash('Profile successful changed')
+        else:
+            flash('Failed to change')
+    except Exception as e:
+        flash(str(e))
+    return redirect('/menu')
+
+
+@app.route('/changepassword', methods=['POST'])
+def changepassword():
+    curpass = request.form.get('curpass')
+    newpass = request.form.get('newpass')
+    user = session['user']
+    try:
+        passchange(user,curpass,newpass)
+        flash('Password successful changed')
     except Exception as e:
         flash(str(e))
     return redirect('/menu')

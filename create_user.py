@@ -20,9 +20,9 @@ def insert_to_user_table(cnn_cfg, table, user_name, user_pass, dl_name, enable=T
                                    port=cnn_cfg['port'])
     c = conn.cursor()
     ph = PasswordHasher()
-    mysql_insert_query = f"""INSERT INTO {table} (username, password, apikey, displayname, enable)
-                                        VALUES (%s, %s, %s, %s, %s) """
-    mysql_record_tuple = (user_name, ph.hash(user_pass), str(uuid.uuid4()),dl_name, enable)
+    mysql_insert_query = f"""INSERT INTO {table} (username, password, displayname, enable)
+                                        VALUES (%s, %s, %s, %s) """
+    mysql_record_tuple = (user_name, ph.hash(user_pass),dl_name, enable)
     c.execute(mysql_insert_query, mysql_record_tuple)
     conn.commit()
     c.close()

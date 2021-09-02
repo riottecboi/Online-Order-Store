@@ -48,6 +48,97 @@
         </div>
     {% endif %}
     {% endwith %}
+  <!-- The profile modal -->
+    <div class="modal" id="profile" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #0A2558;color: white;">
+            <h4 class="modal-title">Edit Profile </h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+            <div class="modal-body">
+                <h5 data-toggle="modal" data-target="#changeprofile" data-dismiss="modal"> <img src="{{ url_for('static',filename='user.png') }}" width="30px" height="30px"> Change details</h5>
+                <h5 data-toggle="modal" data-target="#changepassword" data-dismiss="modal"> <img src="{{ url_for('static',filename='password.png') }}" width="30px" height="30px"> Change password</h5>
+                <p></p>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The detail modal -->
+    <div class="modal" id="changeprofile" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #0A2558;color: white;">
+            <h4 class="modal-title">Modify your profile</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <form id="changepf" action="/changeprofile" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="viewstate" value="{{ viewstate }}">
+            <div class="modal-body">
+                <h5>Change email</h5>
+                <p><input type="text" name="newmail" id="newmail"> </p>
+                <hr>
+                <h5>Change phone</h5>
+                <p><input type="text" name="newphone" id="newphone"> </p>
+
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" >Save changes</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- The password modal -->
+    <div class="modal" id="changepassword" style="color: black">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header" style="background-color: #0A2558;color: white;">
+            <h4 class="modal-title">Change password</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <form id="changepass" action="/changepassword" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="viewstate" value="{{ viewstate }}">
+            <div class="modal-body">
+                <h5>Current Password</h5>
+                <p><input type="password" id="curinputpass"
+                          name="curpass" placeholder="Current Password" required></p>
+                <hr>
+                <h5>New Password</h5>
+                <p><input type="password" id="newinputpass"
+                          name="newpass" placeholder="New Password" required> <input type="checkbox" onclick="maskFunction()"></p>
+            </div>
+              <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" >Save changes</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   <div class="sidebar">
     <div class="logo-details">
       <a href="{{url_for('menu')}}">
@@ -95,7 +186,7 @@
         </form>
       </div>
       <div class="profile-details">
-        <span class="admin_name"> Welcome back <b> {{user}}</b></span><i class='bx bx-cog' ></i>
+        <span class="admin_name"> Welcome back <b> {{user}}</b></span><i class='bx bx-cog' data-toggle="modal" data-target="#profile"></i>
       </div>
     </nav>
     {% for data in datas %}
@@ -267,6 +358,19 @@ function figures() {
         setTimeout(function() {
             $('.login_mes').fadeOut('slow');
             }, 3000);})
+</script>
+<script>
+    function maskFunction() {
+        var x = document.getElementById("curinputpass");
+        var y = document.getElementById("newinputpass");
+        if (x.type === "password") {
+            x.type = "text";
+            y.type = "text";
+        } else {
+            x.type = "password";
+            y.type = "password";
+        }
+    }
 </script>
 </body>
 </html>

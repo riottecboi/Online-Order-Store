@@ -86,6 +86,52 @@
         </li>
       </ul>
   </div>
+  {% for data in datas %}
+      <div class="modal" id="item{{ data['identified'] }}" style="color: black">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header" style="background-color: #0A2558;color: white;">
+              <h4 class="modal-title">Order: {{data['code']}}</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <!-- Modal body -->
+              <div class="modal-body">
+                  <h6>Customer: {{ data['name'] }}</h6>
+                  <h6>Address: {{data['address']}}</h6>
+                  <h6>City: {{data['city']}}</h6>
+                  <h6>Delivery time: </h6>
+                  <p>{{ data['timeship'] }} - {{ data['dayship'] }}</p>
+                  <h4>Total: <b>{{ data['total'] }} VND ({{ data['payment'] }})</b></h4>
+
+              </div>
+              <div class="table_content">
+                  <table>
+                      <thead>
+                      <tr>
+                          <td><h5>Item</h5></td>
+                          <td><h5>Quantity</h5></td>
+                          <td><h5>Price per one</h5></td>
+                      </tr>
+                      </thead>
+                      {% for detail in data['detail'] %}
+                      <tr>
+                          <td>{{detail['item']}}</td>
+                          <td>{{detail['quantity']}}</td>
+                          <td>{{detail['price']}}</td>
+                      </tr>
+                      {% endfor %}
+                  </table>
+              </div>
+                <!-- Modal footer -->
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+        </div>
+      </div>
+  {% endfor %}
   <section class="home-section">
     <nav>
       <div class="sidebar-button">
@@ -135,8 +181,6 @@
                             <th>Name</th>
                             <th>Email</th>
 							<th>Phone</th>
-							<th>Address</th>
-							<th>City</th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -148,10 +192,8 @@
                             <td>{{ data['name'] }}</td>
                             <td>{{ data['email'] }}</td>
                             <td>{{ data['phone'] }}</td>
-                            <td>{{ data['address'] }}</td>
-                            <td>{{ data['city'] }}</td>
                             <td>
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}">details</button>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}" style="font-size: 10px">{{data['code']}}</button>
                             </td>
                         </tr>
                         {% endfor %}

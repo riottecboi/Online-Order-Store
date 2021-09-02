@@ -26,18 +26,18 @@ class Configuration(metaclass=MetaFlaskEnv):
     HOST = "127.0.0.1"
     DB = "online-shop"
     USERS = "admin"
-    PASSWORD = "thisisasecretkey"
+    PASSWORD = "xxxx"
     PORT = 3306
     ITEMS_TABLE = "items"
     ORDERS_TABLE = "orders"
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
     USERS_TABLE = "users"
-    MINIO_API_URL = "34.71.225.137:9000"
-    MINIO_ACCESS_KEY = "socratesaccesskey"
-    MINIO_SECRET_KEY = "socratessecretkey2020"
+    MINIO_API_URL = "xxxx:9000"
+    MINIO_ACCESS_KEY = "xxx"
+    MINIO_SECRET_KEY = "xxx"
     MINIO_SECURE = False
-    MINIO_BUCKET_NAME = "testlifecycle"
+    MINIO_BUCKET_NAME = "byape"
     UPLOAD_PATH = '/tmp'
 
 app = Flask(__name__)
@@ -193,7 +193,7 @@ def get_items(date):
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship from " \
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode from " \
                          f"{app.config['ORDERS_TABLE']} where identified = %s and date(time) = %s"
     orders = get_order_by_identified()
     for order in orders:
@@ -207,7 +207,7 @@ def get_items(date):
             day_raw = resp[9].split('-')
             day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
             results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
-                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'detail': quantity})
+                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'code': resp[11], 'detail': quantity})
     c.close()
     conn.close()
     return results

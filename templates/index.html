@@ -99,12 +99,14 @@
 
             <!-- Modal Header -->
             <div class="modal-header" style="background-color: #0A2558;color: white;">
-              <h4 class="modal-title">List of order</h4>
+              <h4 class="modal-title">Order: {{data['code']}}</h4>
               <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <!-- Modal body -->
               <div class="modal-body">
                   <h6>Customer: {{ data['name'] }}</h6>
+                  <h6>Address: {{data['address']}}</h6>
+                  <h6>City: {{data['city']}}</h6>
                   <h6>Delivery time: </h6>
                   <p>{{ data['timeship'] }} - {{ data['dayship'] }}</p>
                   <h4>Total: <b>{{ data['total'] }} VND ({{ data['payment'] }})</b></h4>
@@ -148,8 +150,6 @@
                             <th>Name</th>
                             <th>Email</th>
 							<th>Phone</th>
-							<th>Address</th>
-							<th>City</th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -160,10 +160,8 @@
                             <td>{{ data['name'] }}</td>
                             <td>{{ data['email'] }}</td>
                             <td>{{ data['phone'] }}</td>
-                            <td>{{ data['address'] }}</td>
-                            <td>{{ data['city'] }}</td>
                             <td>
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}">details</button>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}" style="font-size: 10px">{{data['code']}}</button>
                             </td>
                         </tr>
                         {% endfor %}

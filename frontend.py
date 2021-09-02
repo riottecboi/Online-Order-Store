@@ -8,6 +8,9 @@ from filedownload import FileDownload
 from fileupload import FileUpload
 import base64
 import ast
+import random
+import string
+
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "onlineshopsecretkey"
     WTF_CSRF_SECRET_KEY = "onlineshopsecretkey"
@@ -77,12 +80,12 @@ def update_product(products):
     conn.close()
     return identified
 
-def update_order(identified, name, phone, email, address, city, payment, total, dayship, timeship):
+def update_order(identified, code, name, phone, email, address, city, payment, total, dayship, timeship):
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, name, phone, email, address, city, payment, total,dayship,timeship) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    mysql_update_query = f"insert into {app.config['ORDERS_TABLE']} (identified, ordercode, name, phone, email, address, city, payment, total,dayship,timeship) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     try:
-        c.execute(mysql_update_query, (identified, name, phone, email, address, city, payment, total, dayship,timeship))
+        c.execute(mysql_update_query, (identified, code, name, phone, email, address, city, payment, total, dayship,timeship))
         conn.commit()
         ret = 'Updated', 200
     except Exception as e:
@@ -153,16 +156,18 @@ def processing():
     date = request.form.get('dto').split('T')
     dayship = date[0]
     timeship = date[1]
-    update = update_order(identified,name,phone,email,address,city,type,total,dayship,timeship)
+    code = f"{''.join(random.choice(string.ascii_lowercase) for i in range(8))}"
+    update = update_order(identified,code.upper(),name,phone,email,address,city,type,total,dayship,timeship)
     if update[1] == 200:
-        return redirect(url_for('done'))
+        return redirect(url_for('done', code=code.upper()))
     else:
         return redirect(url_for('products'))
 
-@app.route("/done")
+@app.route("/done", methods=['GET'])
 def done():
+    code = request.args.get('code')
     flash('We receive your order and contact you soon')
-    return render_template("thankyou.html")
+    return render_template("thankyou.html", code=code)
 
 @app.route("/contact")
 def contact():

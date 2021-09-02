@@ -148,11 +148,12 @@
     <div class="home-content">
       <div class="sales-boxes">
         <div class="recent-sales box">
-          <div class="title">Recent Orders - {{current}}</div>
+          <div class="title">Recent Orders</div>
           <div class="table_content">
               <table>
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Time ordered</th>
                             <th>Name</th>
                             <th>Email</th>
@@ -163,10 +164,25 @@
                     <tbody>
                         {% for data in datas %}
                         <tr>
-                            <td>{{ data['timeorder'] }}</td>
-                            <td>{{ data['name'] }}</td>
-                            <td>{{ data['email'] }}</td>
-                            <td>{{ data['phone'] }}</td>
+                            <td>
+                                {% if data['checked'] == 0 %}
+                                <form id="checkbox{{data['identified']}}" action="/check" method="post" enctype = "multipart/form-data">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="id" value="{{data['identified']}}">
+                                    <input type="submit" value="done" class="btn btn-primary" style="font-size: 10px">
+                                </form>
+                                {% else %}
+                                <form id="uncheckbox{{data['identified']}}" action="/uncheck" method="post" enctype = "multipart/form-data">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="id" value="{{data['identified']}}">
+                                    <input type="submit" value="undone" class="btn btn-danger" style="font-size: 10px">
+                                </form>
+                                {% endif %}
+                            </td>
+                            <td>{% if data['checked'] == 0 %}<b>{{ data['timeorder'] }}</b>{% else %}{{ data['timeorder'] }}{%endif%}</td>
+                            <td>{% if data['checked'] == 0 %}<b>{{ data['name'] }}</b>{% else %}{{ data['name'] }}{%endif%}</td>
+                            <td>{% if data['checked'] == 0 %}<b>{{ data['email'] }}</b>{% else %}{{ data['email'] }}{%endif%}</td>
+                            <td>{% if data['checked'] == 0 %}<b>{{ data['phone'] }}</b>{% else %}{{ data['phone'] }}{%endif%}</td>
                             <td>
                                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}" style="font-size: 10px">{{data['code']}}</button>
                             </td>

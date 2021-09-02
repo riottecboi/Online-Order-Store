@@ -268,6 +268,34 @@ def login_function(form):
     conn.close()
     return ret, code
 
+def search_function(keyword):
+    result = []
+    quantity = []
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode, note from {app.config['ORDERS_TABLE']}" \
+                         f" where email like '%{keyword}%' or phone like '{keyword}%' or ordercode like '{keyword}%'"
+    c.execute(mysql_select_query)
+    records = c.fetchall()
+    if len(records) !=0:
+        for resp in records:
+            ids = get_order_itemid(resp[0])
+            for id in ids:
+                quantity.append(get_name_item(id, resp[0]))
+            day_raw = resp[9].split('-')
+            day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
+            result.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
+             'city': resp[5], 'payment': resp[6], 'total': resp[7], 'timeorder': resp[8].strftime('%H:%M %d/%m/%Y'),
+             'dayship': day, 'timeship': resp[10], 'code': resp[11], 'note': resp[12], 'detail': quantity})
+        ret = {'keyword': keyword, 'results': result}
+        code = 200
+    else:
+        ret = {'message': 'Search does not exist'}
+        code = 404
+    c.close()
+    conn.close()
+    return ret, code
+
 @app.route('/')
 def root():
     resp = redirect(url_for('login'))
@@ -384,6 +412,20 @@ def admin_products():
     else:
         flash('You need to login')
         return redirect('/login', code=302)
+
+@app.route('/search', methods=['POST'])
+def search():
+    if request.method == 'POST':
+        user = session.get('user')
+        keyword = request.form.get('keyword')
+        search_resp = search_function(keyword)
+        if search_resp[1] == 200:
+            flash(f"Found {len(search_resp[0]['results'])} result with {search_resp[0]['keyword']}")
+            return render_template('search.html', user=user, datas=search_resp[0]['results'], keyword=search_resp[0]['keyword'], numb=len(search_resp[0]['results']))
+        else:
+            flash('No result found')
+            return render_template('search.html', user=user, datas=[], keyword=keyword, numb=0)
+    return redirect('/orderlist', code=302)
 
 @app.route('/delete', methods=['POST'])
 def delete():

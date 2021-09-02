@@ -11,6 +11,7 @@ import ast
 import random
 import string
 from datetime import timedelta
+from time import sleep
 
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "xxx"
@@ -26,6 +27,7 @@ class Configuration(metaclass=MetaFlaskEnv):
     ORDERS_TABLE = "orders"
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
+    MESSAGES_TABLE = 'messages'
     MINIO_API_URL = "xxx:9000"
     MINIO_ACCESS_KEY = "xxxx"
     MINIO_SECRET_KEY = "xxxx"
@@ -70,6 +72,20 @@ def get_items(id):
     conn.close()
     return ret
 
+def collect_messages(name, phone, subject, message):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_update_query = f"insert into {app.config['MESSAGES_TABLE']} (name, phone, subject, message) values (%s,%s,%s,%s)"
+    try:
+        c.execute(mysql_update_query, (name,phone,subject,message))
+        conn.commit()
+        ret = 'Added', 200
+    except Exception as e:
+        ret = str(e), 400
+    c.close()
+    conn.close()
+    return ret
+
 def update_product(products):
     identified = str(uuid.uuid4())
     conn = cnxpool.get_connection()
@@ -91,7 +107,7 @@ def update_order(identified, code, name, phone, email, address, city, payment, t
         conn.commit()
         ret = 'Updated', 200
     except Exception as e:
-        ret = str(e), 404
+        ret = str(e), 400
     c.close()
     conn.close()
     return ret
@@ -146,6 +162,19 @@ def detail():
             datas.append(item[0])
     session['checkout'] = True
     return render_template('product-details.html', items=datas)
+
+@app.route('/message', methods=['POST'])
+def message():
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    subject = request.form.get('subject')
+    message = request.form.get('message')
+    send_msg = collect_messages(name,str(phone),subject,message)
+    if send_msg[1] == 200:
+        flash('Your message is submitted')
+    else:
+        flash(send_msg[0])
+    return redirect('/contact',code=302)
 
 @app.route('/processing', methods=['GET','POST'])
 def processing():

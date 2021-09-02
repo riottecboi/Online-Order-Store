@@ -34,7 +34,6 @@
     </div>
     <!-- ***** Preloader End ***** -->
 
-
     <!-- ***** Header Area Start ***** -->
     <header class="header-area header-sticky">
         <div class="container">
@@ -69,9 +68,10 @@
                         <br>
                         <br>
                         <h2>Feel free to <em>Contact Us</em></h2>
-                        <p>Give us some feedbacks or notes</p>
+                        <p>Give us some feedbacks or questions</p>
                         <div class="contact-form " style="background-color: white;padding: 20px">
-                            <form id="contact" action="" method="post">
+                            <form id="contact" action="/message" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                               <div class="row">
                                 <div class="col-md-6 col-sm-12">
                                   <fieldset>
@@ -80,7 +80,7 @@
                                 </div>
                                 <div class="col-md-6 col-sm-12">
                                   <fieldset>
-                                    <input name="email" type="text" id="email" pattern="[^ @]*@[^ @]*" placeholder="Your Email*" required="">
+                                    <input name="phone" type="number" id="phone" pattern="[^ @]*@[^ @]*" placeholder="Your Phone*" required="">
                                   </fieldset>
                                 </div>
                                 <div class="col-md-12 col-sm-12">

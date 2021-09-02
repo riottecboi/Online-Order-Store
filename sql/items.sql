@@ -40,12 +40,16 @@ CREATE TABLE `orders` (
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-DROP TABLE IF EXISTS `upload`;
-CREATE TABLE `upload` (
-    `itemid` int(10) NOT NULL,
-    `filename` varchar(40) COLLATE utf8_unicode_ci NOT NULL,
-KEY `itemid_idx` (`itemid`),
-CONSTRAINT `fk_itemidid` FOREIGN KEY (`itemid`) REFERENCES `items` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE `messages` (
+    `id` int(10) NOT NULL AUTO_INCREMENT,
+    `name` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
+    `phone` varchar(16) COLLATE utf8_unicode_ci NOT NULL,
+    `subject` varchar(200) COLLATE utf8_unicode_ci ,
+    `message` MEDIUMTEXT NOT NULL,
+    `time` timestamp NOT NULL default CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `name_idx` (`name`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 DROP TABLE IF EXISTS `products`;

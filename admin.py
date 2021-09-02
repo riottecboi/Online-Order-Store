@@ -193,7 +193,7 @@ def get_items(date):
     results = []
     conn = cnxpool.get_connection()
     c = conn.cursor()
-    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode, note from " \
+    mysql_select_query = f"select identified, name, email, phone, address, city, payment, total, time, dayship, timeship, ordercode, note, checked from " \
                          f"{app.config['ORDERS_TABLE']} where identified = %s and date(time) = %s"
     orders = get_order_by_identified()
     for order in orders:
@@ -207,7 +207,8 @@ def get_items(date):
             day_raw = resp[9].split('-')
             day = day_raw[2] + '/' + day_raw[1] + '/' + day_raw[0]
             results.append({'identified': resp[0], 'name': resp[1], 'email': resp[2], 'phone': resp[3], 'address': resp[4],
-                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'), 'dayship': day, 'timeship': resp[10], 'code': resp[11], 'note': resp[12], 'detail': quantity})
+                        'city': resp[5], 'payment': resp[6], 'total':resp[7], 'timeorder':resp[8].strftime('%H:%M %d/%m/%Y'),
+                        'dayship': day, 'timeship': resp[10], 'code': resp[11], 'note': resp[12], 'checked': resp[13],'detail': quantity})
     c.close()
     conn.close()
     return results
@@ -296,6 +297,36 @@ def search_function(keyword):
     conn.close()
     return ret, code
 
+def check_done_function(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    check = 1
+    mysql_update_query = f"update {app.config['ORDERS_TABLE']} set checked=%s where identified=%s"
+    try:
+        c.execute(mysql_update_query, (check,id))
+        conn.commit()
+        ret = 'Updated', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
+def check_undone_function(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    check = 0
+    mysql_update_query = f"update {app.config['ORDERS_TABLE']} set checked=%s where identified=%s"
+    try:
+        c.execute(mysql_update_query, (check,id))
+        conn.commit()
+        ret = 'Updated', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
 @app.route('/')
 def root():
     resp = redirect(url_for('login'))
@@ -335,6 +366,24 @@ def logout():
     resp = make_response(render_template('login.html', form=LoginForm(), message="Session Expired"))
     session.clear()
     return resp
+
+@app.route('/check', methods=['POST'])
+def check():
+    id = request.form.get('id')
+    try:
+        check_done_function(id)
+    except Exception as e:
+        flash(str(e))
+    return redirect('/menu')
+
+@app.route('/uncheck', methods=['POST'])
+def uncheck():
+    id = request.form.get('id')
+    try:
+        check_undone_function(id)
+    except Exception as e:
+        flash(str(e))
+    return redirect('/menu')
 
 @app.route('/orderlist', methods=['GET', 'POST'])
 def orderlist():

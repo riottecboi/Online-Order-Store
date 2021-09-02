@@ -229,7 +229,7 @@ def delete_item(id):
 def displayfunction(viewstate):
     orders = []
     current = datetime.now().strftime('%H:%M:%S %d/%m/%Y')
-    user = request.cookies.get(app.config['ADMIN_USER'])
+    user = session.get('user')
     if len(viewstate) == 0:
         try:
             current_date = datetime.now().strftime('%Y-%m-%d')
@@ -257,6 +257,7 @@ def login_function(form):
                 ret = {'apikey': record[1], 'user': record[2], 'message':'authsuccess'}
                 code = 200
                 session["if_logged"] = True
+                session['user'] = record[2]
         except (argon2.exceptions.VerifyMismatchError, argon2.exceptions.VerificationError):
             ret = {'message': 'Login incorrect'}
             code = 401
@@ -291,7 +292,6 @@ def login():
             if login_systems[1] == 200:
                 # If response is code 200 --> get apikey and set cookie
                 resp = make_response(redirect("/menu"))
-                resp.set_cookie(key=app.config['ADMIN_USER'], value=login_systems[0]['user'], max_age=300, path='/')
             else: 
                 # If response is code 401 --> redirect to error login page
                 flash(f"{login_systems[0]['message']}")
@@ -305,7 +305,6 @@ def login():
 @app.route('/logout')
 def logout():
     resp = make_response(render_template('login.html', form=LoginForm(), message="Session Expired"))
-    resp.set_cookie(key=app.config['ADMIN_USER'], max_age=0)
     session.clear()
     return resp
 
@@ -314,7 +313,7 @@ def orderlist():
     if session.get('if_logged') is not None:
         orders = []
         sales = 0
-        user = request.cookies.get(app.config['ADMIN_USER'])
+        user = session.get('user')
         if request.method == 'POST':
             datepicker = request.form.get('date').split('T')
             date = datepicker[0]
@@ -345,7 +344,7 @@ def orderlist():
 def admin_products():
     if session.get('if_logged') is not None:
         products = []
-        user = request.cookies.get(app.config['ADMIN_USER'])
+        user = session.get('user')
         items = get_products()
         for product in items:
             images = []

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
-    <link rel = "icon" sizes="152x152" href = "{{ url_for('static',filename='techinno.jpg') }}" type = "image/x-icon">
+      <link rel = "icon" sizes="152x152" href = "{{ url_for('static',filename='techinno.jpg') }}" type = "image/x-icon">
     <meta charset="UTF-8">
-    <title> Techinno | Admin Dashboard </title>
+    <title> Techinno | Admin Dashboard</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/style-1.css')}}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/admin/modal.css')}}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -166,13 +166,13 @@
           </a>
         </li>
         <li>
-          <a href="{{url_for('orderlist')}}" class="active">
+          <a href="{{url_for('orderlist')}}">
             <i class='bx bx-list-ul' ></i>
             <span class="links_name">Order list</span>
           </a>
         </li>
         <li>
-          <a href="{{url_for('message')}}">
+          <a href="{{url_for('message')}}" class="active">
             <i class='bx bx-message-square-dots' ></i>
             <span class="links_name">Message</span>
           </a>
@@ -186,47 +186,59 @@
       </ul>
   </div>
   {% for data in datas %}
-      <div class="modal" id="item{{ data['identified'] }}" style="color: black">
+      <div class="modal" id="delete{{ data['id'] }}" style="color: black">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header" style="background-color: #0A2558;color: white;">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form action="/delete_message" method="post" enctype = "multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="itemid" value="{{ data['id'] }}"/>
+                <div class="modal-body">
+                    <h5>Are you sure want to delete ?</h5>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger" >Delete</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+  {% endfor %}
+  {% for data in datas %}
+      <div class="modal" id="item{{ data['id'] }}" style="color: black">
         <div class="modal-dialog">
           <div class="modal-content">
 
             <!-- Modal Header -->
             <div class="modal-header" style="background-color: #0A2558;color: white;">
-              <h4 class="modal-title">Order: {{data['code']}}</h4>
+              <h4 class="modal-title">Message</h4>
               <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <!-- Modal body -->
               <div class="modal-body">
                   <h6>Customer: {{ data['name'] }}</h6>
-                  <h6>Address: {{data['address']}}</h6>
-                  <h6>City: {{data['city']}}</h6>
-                  <h6>Delivery time: {{ data['timeship'] }} - {{ data['dayship'] }}</h6>
-                  <h6>Note: </h6>
-                  <p>{{data['note']}}</p>
-                  <h4>Total: <b>{{ data['total'] }} VND ({{ data['payment'] }})</b></h4>
+                  <h6>Received time: {{ data['time'] }}</h6>
+                    <h5>Subject:</h5>
+                    <p>
+                        <input type="text" disabled value="{{ data['subject'] }}" size="28">
+                    </p>
+                    <hr>
+                    <h5>Message:</h5>
+                    <p>
+                        <textarea disabled rows="5" cols="30">{{ data['message'] }}</textarea>
+                    </p>
+                    <hr>
+              </div>
 
-              </div>
-              <div class="table_content">
-                  <table>
-                      <thead>
-                      <tr>
-                          <td><h5>Item</h5></td>
-                          <td><h5>Quantity</h5></td>
-                          <td><h5>Price per one</h5></td>
-                      </tr>
-                      </thead>
-                      {% for detail in data['detail'] %}
-                      <tr>
-                          <td>{{detail['item']}}</td>
-                          <td>{{detail['quantity']}}</td>
-                          <td>{{detail['price']}}</td>
-                      </tr>
-                      {% endfor %}
-                  </table>
-              </div>
                 <!-- Modal footer -->
               <div class="modal-footer">
-                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-danger" data-toggle="modal" data-dismiss="modal" data-target="#delete{{ data['id'] }}">Delete</button>
+                  <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
               </div>
           </div>
         </div>
@@ -236,13 +248,7 @@
     <nav>
       <div class="sidebar-button">
           <i class='bx bx-menu sidebarBtn'></i>
-          <span class="dashboard">Order list</span>
-      </div>
-      <div class="search-box" >
-        <form id="search" action="/search" method="post" enctype = "multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <input type="text" name="keyword" placeholder="Search...">
-        </form>
+          <span class="dashboard">Messages</span>
       </div>
       <div class="profile-details">
         <span class="admin_name"> Welcome back <b> {{user}}</b></span><i class='bx bx-cog' data-toggle="modal" data-target="#profile"></i>
@@ -252,7 +258,7 @@
           <div class="overview-boxes">
             <div class="box">
               <div class="right-side">
-                <form id="filter" action="/orderlist" method="post" enctype = "multipart/form-data">
+                <form id="filter" action="/message" method="post" enctype = "multipart/form-data">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="select">
                         <input type="date" name="date" id="date">
@@ -262,40 +268,26 @@
                 </form>
               </div>
             </div>
-            <div class="box">
-              <div class="right-side">
-                <div class="box-topic">Total Order</div>
-                <div class="number">{{datas|length}}</div>
-              </div>
-            </div>
-            <div class="box">
-              <div class="right-side">
-                <div class="box-topic">Total Sales</div>
-                <div class="number">{{sales}}</div>
-              </div>
-            </div>
+
           </div>
           <div class="table_content" style="border-radius: 12px;margin: 0 20px;box-shadow: 0 5px 10px rgb(0 0 0 / 10%);margin-top: 20px">
               <table>
                     <thead>
                         <tr>
-                            <th>Time ordered</th>
+                            <th>Time</th>
                             <th>Name</th>
-                            <th>Email</th>
-							<th>Phone</th>
-                            <th>Details</th>
+                            <th>Phone</th>
                         </tr>
                     </thead>
                     {% if datas|length > 0 %}
                     <tbody>
                         {% for data in datas %}
                         <tr>
-                            <td>{{ data['timeorder'] }}</td>
+                            <td>{{ data['time'] }}</td>
                             <td>{{ data['name'] }}</td>
-                            <td>{{ data['email'] }}</td>
                             <td>{{ data['phone'] }}</td>
                             <td>
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['identified'] }}" style="font-size: 10px">{{data['code']}}</button>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#item{{ data['id'] }}" style="font-size: 10px">details</button>
                             </td>
                         </tr>
                         {% endfor %}

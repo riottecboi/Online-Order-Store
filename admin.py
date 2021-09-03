@@ -34,6 +34,7 @@ class Configuration(metaclass=MetaFlaskEnv):
     UPLOAD_TABLE = "upload"
     PRODUCTS_TABLE = "products"
     USERS_TABLE = "users"
+    MESSAGES_TABLE = "messages"
     MINIO_API_URL = "xxxx:9000"
     MINIO_ACCESS_KEY = "xxx"
     MINIO_SECRET_KEY = "xxx"
@@ -228,6 +229,21 @@ def delete_item(id):
     conn.close()
     return ret
 
+def delete_msg(id):
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_delete_query = f"delete from {app.config['MESSAGES_TABLE']} where id=%s"
+    try:
+        c.execute(mysql_delete_query, (id,))
+        conn.commit()
+        ret = 'Item deleted', 200
+    except Exception as e:
+        ret = str(e), 404
+    c.close()
+    conn.close()
+    return ret
+
+
 def displayfunction(viewstate):
     orders = []
     current = datetime.now().strftime('%H:%M:%S %d/%m/%Y')
@@ -371,6 +387,26 @@ def passchange(user, curpass, newpass):
     conn.close()
     return ret, code
 
+def get_messages_by_date(date):
+    results = []
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select * from {app.config['MESSAGES_TABLE']} where date(time)=%s"
+    c.execute(mysql_select_query, (date,))
+    records = c.fetchall()
+    if records is not None:
+        for record in records:
+            res = {'id': record[0], 'name': record[1], 'phone': record[2], 'subject': record[3], 'message': record[4], 'time': record[5].strftime('%H:%M %d/%m/%Y')}
+            results.append(res)
+        ret = results
+        code = 200
+    else:
+        ret = results
+        code = 404
+    c.close()
+    conn.close()
+    return ret, code
+
 @app.route('/')
 def root():
     resp = redirect(url_for('login'))
@@ -401,6 +437,7 @@ def login():
                 resp = render_template('login.html', form=form)
             return resp
         except Exception as e:
+            session.clear()
             flash(f"{str(e)}")
             return render_template('login.html', form=form)
     return render_template('login.html', form=form)
@@ -417,6 +454,7 @@ def check():
     try:
         check_done_function(id)
     except Exception as e:
+        session.clear()
         flash(str(e))
     return redirect('/menu')
 
@@ -426,6 +464,7 @@ def uncheck():
     try:
         check_undone_function(id)
     except Exception as e:
+        session.clear()
         flash(str(e))
     return redirect('/menu')
 
@@ -441,6 +480,7 @@ def changemailform():
         else:
             flash('Failed to change')
     except Exception as e:
+        session.clear()
         flash(str(e))
     return redirect('/menu')
 
@@ -454,8 +494,47 @@ def changepassword():
         passchange(user,curpass,newpass)
         flash('Password successful changed')
     except Exception as e:
+        session.clear()
         flash(str(e))
     return redirect('/menu')
+
+@app.route('/message', methods=['GET', 'POST'])
+def message():
+    if session.get('if_logged') is not None:
+        user = session.get('user')
+        messages = []
+        if request.method == 'POST':
+            datepicker = request.form.get('date').split('T')
+            date = datepicker[0]
+            try:
+                msg = get_messages_by_date(date)
+                if msg[1] == 200:
+                    flash(f"Found total {len(msg[0])} message")
+                    messages.extend(msg[0])
+                else:
+                    flash("No message found")
+            except Exception as e:
+                session.clear()
+                flash('Error: {}'.format(str(e)))
+                pass
+        else:
+            try:
+                current_date = datetime.now().strftime('%Y-%m-%d')
+                msg = get_messages_by_date(current_date)
+                if msg[1] == 200 and len(msg[0]) > 0:
+                    flash(f"Found total {len(msg[0])} message")
+                    messages.extend(msg[0])
+                else:
+                    flash("No message found")
+            except Exception as e:
+                session.clear()
+                flash('Error: {}'.format(str(e)))
+                pass
+        return render_template('message.html', user=user, datas=messages)
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
+
 
 @app.route('/orderlist', methods=['GET', 'POST'])
 def orderlist():
@@ -471,6 +550,7 @@ def orderlist():
                 for order in orders:
                     sales += int(order['total'])
             except Exception as e:
+                session.clear()
                 flash('Error: {}'.format(str(e)))
                 pass
         else:
@@ -480,6 +560,7 @@ def orderlist():
                 for order in orders:
                     sales += int(order['total'])
             except Exception as e:
+                session.clear()
                 flash('Error: {}'.format(str(e)))
                 pass
         if len(orders) == 0:
@@ -554,7 +635,19 @@ def delete():
         id = request.form.get('itemid')
         delete = delete_item(id)
         flash(f"{delete[0]}")
-        return redirect("admin_products")
+        return redirect("/admin_products")
+    else:
+        flash('You need to login')
+        return redirect('/login', code=302)
+
+
+@app.route('/delete_message', methods=['POST'])
+def delete_message():
+    if session.get('if_logged') is not None:
+        id = request.form.get('itemid')
+        delete = delete_msg(id)
+        flash(f"{delete[0]}")
+        return redirect("/message")
     else:
         flash('You need to login')
         return redirect('/login', code=302)

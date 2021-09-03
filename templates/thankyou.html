@@ -2,7 +2,7 @@
 <html lang="en">
 
   <head>
-
+    <link rel = "icon" sizes="152x152" href = "{{ url_for('static',filename='monkey.jpg') }}" type = "image/x-icon">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
@@ -55,11 +55,11 @@
                 <div class="col-12">
                     <nav class="main-nav">
                         <!-- ***** Logo Start ***** -->
-                        <a href="index.html" class="logo">By <em> APE</em></a>
+                        <a href="/home" class="logo">By <em> APE</em></a>
                         <!-- ***** Logo End ***** -->
                         <!-- ***** Menu Start ***** -->
                         <ul class="nav">
-                            <li><a href="index.html">Home</a></li>
+                            <li><a href="/home">Home</a></li>
                             <li><a href="/products">Products</a></li>
                             <li><a href="/contact">Contact</a></li>
                         </ul>        
@@ -106,7 +106,7 @@
                         <i class="fa fa-phone"></i>
                     </div>
 
-                    <h5><a href="#">+1 333 4040 5566</a></h5>
+                    <h5><a href="#">{{phone}}</a></h5>
 
                     <br>
                 </div>
@@ -116,7 +116,7 @@
                         <i class="fa fa-envelope"></i>
                     </div>
 
-                    <h5><a href="#">byapeman@gmail.com</a></h5>
+                    <h5><a href="#">{{mail}}</a></h5>
 
                     <br>
                 </div>
@@ -126,7 +126,7 @@
                         <i class="fa fa-instagram"></i>
                     </div>
 
-                    <h5>by.ape</h5>
+                    <h5><a href="#">by.ape</a></h5>
 
                     <br>
                 </div>

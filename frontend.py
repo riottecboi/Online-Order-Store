@@ -11,7 +11,6 @@ import ast
 import random
 import string
 from datetime import timedelta
-from time import sleep
 
 class Configuration(metaclass=MetaFlaskEnv):
     SECRET_KEY = "xxx"
@@ -21,6 +20,7 @@ class Configuration(metaclass=MetaFlaskEnv):
     HOST = "127.0.0.1"
     DB = "online-shop"
     USERS = "admin"
+    PROFILE = "xxx"
     PASSWORD = "xxxx"
     PORT = 3306
     ITEMS_TABLE = "items"
@@ -112,10 +112,54 @@ def update_order(identified, code, name, phone, email, address, city, payment, t
     conn.close()
     return ret
 
+def get_profile():
+    conn = cnxpool.get_connection()
+    c = conn.cursor()
+    mysql_select_query = f"select email, telephone from {app.config['USERS_TABLE']} where username=%s"
+    c.execute(mysql_select_query, (app.config['PROFILE'],))
+    record = c.fetchone()
+    if record is not None:
+        email = record[0]
+        phone = record[1]
+    else:
+        email = 'supprort@email.com'
+        phone = '+84397986742'
+    c.close()
+    conn.close()
+    return email, phone
+
 @app.route('/')
 def index():
     session.permanent = True
-    return redirect(url_for('products'))
+    return redirect(url_for('home'))
+
+@app.route('/home')
+def home():
+    items = list()
+    products = []
+    count = 0
+    for product in items[0]:
+        if count<= 3:
+            count += 1
+            if 'images' in product:
+                product['images'] = ast.literal_eval(product['images'])
+                if 'profile' in product['images']:
+                    profileimg = product['images']['profile']['path']
+                    bucket_name = product['images']['profile']['bucket_name']
+                    try:
+                        file = download.download_file(profileimg, bucket_name=bucket_name)
+                        product['img'] = base64.b64encode(file['data']).decode('ascii')
+                        product['content_type'] = file['content_type']
+                        product['profilehasimg'] = True
+                    except:
+                        product['profilehasimg'] = False
+                else:
+                    product['profilehasimg'] = False
+                product.pop('images')
+                products.append(product)
+        else:
+            break
+    return render_template('home.html', items=products)
 
 @app.route('/products', methods=['GET','POST'])
 def products():
@@ -202,14 +246,18 @@ def processing():
 
 @app.route("/done", methods=['GET'])
 def done():
+    mail = get_profile()[0]
+    phone = get_profile()[1]
     code = request.args.get('code')
     flash('We receive your order and contact you soon')
     session.clear()
-    return render_template("thankyou.html", code=code)
+    return render_template("thankyou.html", code=code, mail=mail,phone=phone)
 
 @app.route("/contact")
 def contact():
-    return render_template("contact.html")
+    mail = get_profile()[0]
+    phone = get_profile()[1]
+    return render_template("contact.html", mail=mail,phone=phone)
 
 @app.route('/check', methods=['POST'])
 def check():
